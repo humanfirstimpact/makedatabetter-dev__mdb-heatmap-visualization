@@ -28,6 +28,11 @@
        :host .column {
         flex: 1;
         width: 33%;
+        margin: var(--standard-padding, 20px);
+      }
+
+       :host .column.chart {
+        background-color: #fff;
         padding: var(--standard-padding, 20px);
       }
 
@@ -55,7 +60,7 @@
     </style>
     <atom-google-sheet-adapter key="{{key}}"></atom-google-sheet-adapter>
     <div class="container">
-      <div class="column">
+      <div class="column chart">
         <h2>Your GDPR Story</h2>
         <mdb-heatmap data="[[data]]"></mdb-heatmap>
       </div>
