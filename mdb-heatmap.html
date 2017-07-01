@@ -56,24 +56,23 @@
             render: function () {
                 var data = this.data
                     .map(function (e, i) {
-                        return {
-                            row: parseInt(i / 10),
-                            col: i % 10,
-                            status: parseInt(Math.random() * 100)
-                        };
+                        e.row = parseInt(i / 10);
+                        e.col = i % 10;
+                        e.status = parseInt(Math.random() * 100);
+                        return e;
                     });
                 this._render(data);
             },
 
             _render: function (data) {
                 if (this.svg) {
+                    var that = this;
                     var margin = { top: 50, right: 0, bottom: 100, left: 30 },
                         width = 600,
                         height = 600,
                         gridSize = Math.floor(width / 20),
-                        legendElementWidth = gridSize * 2,
-                        buckets = 9,
-                        colors = ["#ffffd9", "#edf8b1", "#c7e9b4", "#7fcdbb", "#41b6c4", "#1d91c0", "#225ea8", "#253494", "#081d58"]; // alternatively colorbrewer.YlGnBu[9]
+                        buckets = 5,
+                        colors = ['#c8e6c9', '#a5d6a7', '#81c784', '#66bb6a', '#4caf50'];
 
                     var colorScale = d3.scale.quantile()
                         .domain([0, buckets - 1, d3.max(data, function (d) { return d.status; })])
@@ -92,7 +91,22 @@
                         .attr("class", "hour bordered")
                         .attr("width", gridSize)
                         .attr("height", gridSize)
-                        .style("fill", colors[0]);
+                        .style("fill", colors[0])
+                        .on('click', function (data) {
+                            //that._click.apply(that, arguments);
+                            that.fire('article-changed', data);
+                        })
+                        .on("mouseover", function (d) {
+                            var g = d3.select(this); // The node
+                            // The class is used to remove the additional text later
+                            var info = g.append('text')
+                                .attr("class", "hover")
+                                .text(d.name);
+                        })
+                        .on("mouseout", function () {
+                            // Remove the info text on mouse out.
+                            d3.select(this).select('text.hover').remove();
+                        });
 
                     cards.transition().duration(1000)
                         .style("fill", function (d) { return colorScale(d.status); });
@@ -100,27 +114,6 @@
                     cards.select("title").text(function (d) { return d.status; });
 
                     cards.exit().remove();
-
-                    var legend = this.svg.selectAll(".legend")
-                        .data([0].concat(colorScale.quantiles()), function (d) { return d; });
-
-                    legend.enter().append("g")
-                        .attr("class", "legend");
-
-                    legend.append("rect")
-                        .attr("x", function (d, i) { return legendElementWidth * i; })
-                        .attr("y", height)
-                        .attr("width", legendElementWidth)
-                        .attr("height", gridSize / 2)
-                        .style("fill", function (d, i) { return colors[i]; });
-
-                    legend.append("text")
-                        .attr("class", "mono")
-                        .text(function (d) { return "≥ " + Math.round(d); })
-                        .attr("x", function (d, i) { return legendElementWidth * i; })
-                        .attr("y", height + gridSize);
-
-                    legend.exit().remove();
                 }
             }
         });

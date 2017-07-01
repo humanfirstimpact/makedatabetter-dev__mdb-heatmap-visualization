@@ -29,6 +29,11 @@
         flex: 1;
         width: 33%;
         margin: var(--standard-padding, 20px);
+        margin-right: 0;
+      }
+
+       :host .column:nth-child(3) {
+        margin-right: var(--standard-padding, 20px);
       }
 
        :host .column.chart {
@@ -36,17 +41,16 @@
         padding: var(--standard-padding, 20px);
       }
 
-       :host .article {
+       :host .article-column {
         background-color: #fff9c5;
+      }
+
+       :host .article {
         padding: var(--standard-padding, 20px);
       }
 
-       :host .article h3 {
-        padding-left: var(--standard-padding, 20px);
-      }
-
        :host .article ol {
-        padding-left: var(--standard-padding, 20px);
+        padding-left: 0;
       }
 
        :host .article-term {
@@ -55,7 +59,7 @@
 
        :host .toBeCompliant,
        :host .faq {
-        padding: var(--standard-padding, 20px);
+        padding-top: var(--standard-padding, 20px);
       }
     </style>
     <atom-google-sheet-adapter key="{{key}}"></atom-google-sheet-adapter>
@@ -85,11 +89,11 @@
           </div>
         </iron-pages>
       </div>
-      <div class="column">
+      <div class="column article-column">
         <template is="dom-if" if="[[selectedArticle]]">
           <div class="article">
             <h3>[[selectedArticle.description]]</h3>
-            <h3>Article [[selectedArticle.name]]</h3>
+            <h3>[[selectedArticle.name]]</h3>
             <h3>[[selectedArticle.articleContent.title]]</h3>
             <ol>
               <template is="dom-repeat" items="[[selectedArticle.articleContent.description]]">
@@ -140,6 +144,14 @@
         }
       },
 
+      listeners: {
+        'article-changed': '_articleChanged'
+      },
+
+      _articleChanged: function (e) {
+        this.selectedArticle = e.detail;
+      },
+
       _keyChanged: function () {
         if (this.key) {
           var that = this;
@@ -185,8 +197,9 @@
 
         model.forEach(function (row, index) {
           var content = (row.articlecontent || '').match(/^(.*)$/mg);
-          var article = articles.find(function (e) { return e.name === row.article; }) || articles.push({
-            name: row.article,
+          var name = 'Article ' + row.article;
+          var article = articles.find(function (e) { return e.name === name; }) || articles.push({
+            name: name,
             description: row.oversimplifieddescriptionarticlesandrecitals,
             articleContent: {
               title: content[0],
