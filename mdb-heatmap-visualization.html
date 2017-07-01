@@ -1,0 +1,177 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../atom-google-sheet-adapter/atom-google-sheet-adapter.html">
+<link rel="import" href="../paper-tabs/paper-tabs.html">
+<link rel="import" href="../paper-tabs/paper-tab.html">
+<link rel="import" href="../iron-pages/iron-pages.html">
+<link rel="import" href="mdb-heatmap.html">
+
+<!--
+`mdb-heatmap-visualization`
+
+
+@demo demo/index.html 
+-->
+
+<dom-module id="mdb-heatmap-visualization">
+  <template>
+    <style>
+       :host {
+        display: block;
+      }
+
+       :host .container {
+        display: flex;
+        justify-content: center;
+        flex-wrap: nowrap;
+      }
+
+       :host .column {
+        flex: 1;
+        width: 33%;
+      }
+
+       :host .article {
+        background-color: #fff9c5;
+        padding: var(--standard-padding, 20px);
+      }
+    </style>
+    <atom-google-sheet-adapter key="{{key}}"></atom-google-sheet-adapter>
+    <div class="container">
+      <div class="column">
+        <mdb-heatmap data="[[data]]"></mdb-heatmap>
+      </div>
+      <div class="column">
+        <paper-tabs selected="{{selectedTab}}">
+          <paper-tab>TO BE COMPLIANT</paper-tab>
+          <paper-tab>FAQS</paper-tab>
+        </paper-tabs>
+        <iron-pages selected="{{selectedTab}}">
+          <div class="toBeCompliant">
+            <template is="dom-repeat" items="[[selectedArticle.toBeCompliant]]">
+              <div>[[item.content]]</div>
+            </template>
+          </div>
+          <div class="faq">
+            <template is="dom-repeat" items="[[selectedArticle.faqs]]">
+              <h3>[[item.title]]</h3>
+              <div>[[item.description]]</div>
+            </template>
+          </div>
+        </iron-pages>
+      </div>
+      <div class="column">
+        <template is="dom-if" if="[[selectedArticle]]">
+          <div class="article">
+            <h3>[[selectedArticle.description]]</h3>
+            <h3>Article [[selectedArticle.article]]</h3>
+            <div>[[selectedArticle.articleContent]]</div>
+          </div>
+        </template>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    Polymer({
+
+      is: 'mdb-heatmap-visualization',
+
+      properties: {
+        key: {
+          type: String,
+          observer: '_keyChanged',
+        },
+
+        modelSheet: {
+          type: String,
+          value: 'heat-map'
+        },
+
+        glossarySheet: {
+          type: String,
+          value: 'Glossary'
+        },
+
+        data: {
+          type: Array,
+          value: [],
+          observer: '_dataChanged'
+        },
+
+        selectedArticle: {
+          type: Object,
+          value: {}
+        },
+
+        selectedTab: {
+          type: Number,
+          value: 0
+        }
+      },
+
+      _keyChanged: function () {
+        if (this.key) {
+          var that = this;
+          var adapter = this.querySelector('atom-google-sheet-adapter');
+          adapter.read(this.modelSheet)
+            .then(function (data) {
+              that.dataLoaded = true;
+              setTimeout(function () {
+                that.set('data', that._transform(data));
+                that.selectedArticle = that.data[0];//Select first article by default
+              }, 0);
+            });
+        }
+      },
+
+      _fetchData: function () {
+        var that = this,
+          adapter = this.querySelector('atom-google-sheet-adapter');
+
+        var p1 = adapter.read(this.modelSheet)
+          .then(function (data) {
+            that.dataLoaded = true;
+            setTimeout(function () {
+              that.set('data', that._transform(data));
+              that.selectedArticle = that.data[0];//Select first article by default
+            }, 0);
+          });
+
+        var p2 = adapter.read();
+      },
+
+      _dataChanged: function () {
+        var heatMap = this.querySelector('mdb-heatmap');
+        if (heatMap) heatMap.render();
+      },
+
+      _transform: function (data) {
+        var articles = [];
+
+        data.forEach(function (row, index) {
+          var article = articles.find(function (e) { return e.article === row.article; }) || articles.push({
+            article: row.article,
+            description: row.oversimplifieddescriptionarticlesandrecitals,
+            articleContent: row.articlecontent,
+            faqs: [],
+            toBeCompliant: []
+          }) && articles[articles.length - 1];
+
+          article.faqs.push({
+            title: row.faqs.match(/^(.*)$/m)[0],
+            description: row.faqs.replace(row.faqs.match(/^(.*)$/m)[0], '').trim()
+          });
+
+          article.toBeCompliant.push({
+            content: row.whatitmeansoutcomestobecompliantmodeltobecompliantmycompanycontrollermust,
+            status: row.status
+          });
+
+        });
+
+        return articles;
+      }
+
+    });
+  </script>
+</dom-module>
