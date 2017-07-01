@@ -107,7 +107,9 @@
             <h3>[[selectedArticle.articleContent.title]]</h3>
             <ol>
               <template is="dom-repeat" items="[[selectedArticle.articleContent.description]]">
-                <li class="article-term">[[item]]</li>
+                <template is="dom-if" if="[[item]]">
+                  <li class="article-term">[[item]]</li>
+                </template>
               </template>
             </ol>
           </div>
