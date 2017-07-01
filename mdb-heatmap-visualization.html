@@ -28,16 +28,35 @@
        :host .column {
         flex: 1;
         width: 33%;
+        padding: var(--standard-padding, 20px);
       }
 
        :host .article {
         background-color: #fff9c5;
         padding: var(--standard-padding, 20px);
       }
+
+       :host .article h3 {
+        padding-left: var(--standard-padding, 20px);
+      }
+
+       :host .article ol {
+        padding-left: var(--standard-padding, 20px);
+      }
+
+       :host .article-term {
+        margin-bottom: var(--standard-padding, 20px);
+      }
+
+       :host .toBeCompliant,
+       :host .faq {
+        padding: var(--standard-padding, 20px);
+      }
     </style>
     <atom-google-sheet-adapter key="{{key}}"></atom-google-sheet-adapter>
     <div class="container">
       <div class="column">
+        <h2>Your GDPR Story</h2>
         <mdb-heatmap data="[[data]]"></mdb-heatmap>
       </div>
       <div class="column">
@@ -48,7 +67,9 @@
         <iron-pages selected="{{selectedTab}}">
           <div class="toBeCompliant">
             <template is="dom-repeat" items="[[selectedArticle.toBeCompliant]]">
-              <div>[[item.content]]</div>
+              <template is="dom-if" if="[[item.content]]">
+                <div>[[item.content]]</div>
+              </template>
             </template>
           </div>
           <div class="faq">
@@ -63,8 +84,13 @@
         <template is="dom-if" if="[[selectedArticle]]">
           <div class="article">
             <h3>[[selectedArticle.description]]</h3>
-            <h3>Article [[selectedArticle.article]]</h3>
-            <div>[[selectedArticle.articleContent]]</div>
+            <h3>Article [[selectedArticle.name]]</h3>
+            <h3>[[selectedArticle.articleContent.title]]</h3>
+            <ol>
+              <template is="dom-repeat" items="[[selectedArticle.articleContent.description]]">
+                <li class="article-term">[[item]]</li>
+              </template>
+            </ol>
           </div>
         </template>
       </div>
@@ -112,12 +138,13 @@
       _keyChanged: function () {
         if (this.key) {
           var that = this;
-          var adapter = this.querySelector('atom-google-sheet-adapter');
-          adapter.read(this.modelSheet)
+          this._fetchData()
             .then(function (data) {
               that.dataLoaded = true;
               setTimeout(function () {
-                that.set('data', that._transform(data));
+                var model = data[0],
+                  glossary = data[1];
+                that.set('data', that._transform(model, glossary));
                 that.selectedArticle = that.data[0];//Select first article by default
               }, 0);
             });
@@ -128,16 +155,19 @@
         var that = this,
           adapter = this.querySelector('atom-google-sheet-adapter');
 
-        var p1 = adapter.read(this.modelSheet)
-          .then(function (data) {
-            that.dataLoaded = true;
-            setTimeout(function () {
-              that.set('data', that._transform(data));
-              that.selectedArticle = that.data[0];//Select first article by default
-            }, 0);
-          });
-
-        var p2 = adapter.read();
+        return new Promise(function (resolve, reject) {
+          adapter.read(that.modelSheet)
+            .then(function (model) {
+              adapter.read(that.glossarySheet)
+                .then(function (glossary) {
+                  resolve([model, glossary]);
+                }).catch(function (error) {
+                  reject(error);
+                });
+            }).catch(function (error) {
+              reject(error);
+            });
+        });
       },
 
       _dataChanged: function () {
@@ -145,28 +175,39 @@
         if (heatMap) heatMap.render();
       },
 
-      _transform: function (data) {
+      _transform: function (model, glossary) {
         var articles = [];
 
-        data.forEach(function (row, index) {
-          var article = articles.find(function (e) { return e.article === row.article; }) || articles.push({
-            article: row.article,
+        model.forEach(function (row, index) {
+          var content = (row.articlecontent || '').match(/^(.*)$/mg);
+          var article = articles.find(function (e) { return e.name === row.article; }) || articles.push({
+            name: row.article,
             description: row.oversimplifieddescriptionarticlesandrecitals,
-            articleContent: row.articlecontent,
+            articleContent: {
+              title: content[0],
+              description: content.slice(1).filter(function (e) { return !!e; }).map(function (e) { return e.replace(/^\d+\./, '').trim(); })
+            },
             faqs: [],
             toBeCompliant: []
           }) && articles[articles.length - 1];
 
-          article.faqs.push({
-            title: row.faqs.match(/^(.*)$/m)[0],
-            description: row.faqs.replace(row.faqs.match(/^(.*)$/m)[0], '').trim()
-          });
+          if (row.faqs) {
+            // var description = row.faqs.replace(row.faqs.match(/^(.*)$/m)[0], '').trim();
+            // glossary.forEach(function (g) {
+            //   description = description.replace('{{' + g.term + '}}', g.definition);
+            // });
+            article.faqs.push({
+              title: row.faqs.match(/^(.*)$/m)[0],
+              description: row.faqs.replace(row.faqs.match(/^(.*)$/m)[0], '').trim()
+            });
+          }
 
-          article.toBeCompliant.push({
-            content: row.whatitmeansoutcomestobecompliantmodeltobecompliantmycompanycontrollermust,
-            status: row.status
-          });
-
+          if (row.whatitmeansoutcomestobecompliantmodeltobecompliantmycompanycontrollermust) {
+            article.toBeCompliant.push({
+              content: row.whatitmeansoutcomestobecompliantmodeltobecompliantmycompanycontrollermust,
+              status: row.status
+            });
+          }
         });
 
         return articles;
