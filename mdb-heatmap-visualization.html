@@ -63,13 +63,20 @@
       }
 
        :host .toBeCompliant,
-       :host .faq {
+       :host .faq,
+       :host .glossary {
         padding-top: var(--standard-padding, 20px);
       }
 
-       :host .faq h3 {
+       :host .faq h3,
+       :host .glossary h3 {
         margin-bottom: 5px;
         margin-top: var(--standard-padding, 20px);
+      }
+
+       :host .faq h3:nth-child(1),
+       :host .glossary h3:nth-child(1) {
+        margin-top: 0;
       }
 
        :host pre {
@@ -119,6 +126,7 @@
         <paper-tabs selected="{{selectedTab}}">
           <paper-tab>TO BE COMPLIANT</paper-tab>
           <paper-tab>FAQS</paper-tab>
+          <paper-tab>GLOSSARY</paper-tab>
         </paper-tabs>
         <iron-pages selected="{{selectedTab}}">
           <div class="toBeCompliant">
@@ -132,6 +140,12 @@
             <template is="dom-repeat" items="[[selectedArticle.faqs]]">
               <h3>[[item.title]]</h3>
               <div>[[item.description]]</div>
+            </template>
+          </div>
+          <div class="glossary">
+            <template is="dom-repeat" items="[[glossary]]">
+              <h3>[[item.term]]</h3>
+              <div>[[item.definition]]</div>
             </template>
           </div>
         </iron-pages>
@@ -175,6 +189,11 @@
           observer: '_dataChanged'
         },
 
+        glossary: {
+          type: Array,
+          value: []
+        },
+
         selectedArticle: {
           type: Object,
           value: {}
@@ -203,7 +222,8 @@
               setTimeout(function () {
                 var model = data[0],
                   glossary = data[1];
-                that.set('data', that._transform(model, glossary));
+                that.set('data', that._transform(model));
+                that.set('glossary', glossary);
                 that.selectedArticle = that.data[0];//Select first article by default
               }, 0);
             });
@@ -234,7 +254,7 @@
         if (heatMap) heatMap.render();
       },
 
-      _transform: function (model, glossary) {
+      _transform: function (model) {
         var articles = [];
 
         model.forEach(function (row, index) {
