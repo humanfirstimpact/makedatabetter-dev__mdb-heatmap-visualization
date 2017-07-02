@@ -19,6 +19,10 @@
         display: block;
       }
 
+       :host paper-tabs {
+        border-bottom: 1px solid #dfdfdf;
+      }
+
        :host .container {
         display: flex;
         justify-content: center;
@@ -39,6 +43,7 @@
        :host .column.chart {
         background-color: #fff;
         padding: var(--standard-padding, 20px);
+        padding-right: 0;
       }
 
        :host .article-column {
@@ -61,6 +66,32 @@
        :host .faq {
         padding-top: var(--standard-padding, 20px);
       }
+
+       :host pre {
+        white-space: pre-wrap;
+      }
+
+       :host .gdpr-metrics {
+        display: flex;
+        justify-content: space-around;
+        text-align: center;
+        border: 1px solid #f7fafe;
+        margin-top: var(--standard-padding, 20px);
+        width: 300px;
+      }
+
+       :host .gdpr-metrics h2 {
+        margin: 0;
+        font-size: 40px;
+        color: #7f88e9;
+        font-weight: 400;
+        text-shadow: 0 0 10px;
+      }
+
+       :host .gdpr-metrics p {
+        color: #cacdd5;
+        font-size: 15px;
+      }
     </style>
     <atom-google-sheet-adapter key="{{key}}"></atom-google-sheet-adapter>
     <div class="container">
@@ -68,14 +99,14 @@
         <h2>Your GDPR Story</h2>
         <mdb-heatmap data="[[data]]"></mdb-heatmap>
         <div class="gdpr-metrics">
-          <!--<div>
-            <h2>17/77</h2>
-            <div>Checklist items done</div>
+          <div>
+            <h2>[[_countChecklistItemsDone(data)]]/[[_countChecklistItemsTotal(data)]]</h2>
+            <p>Checklist items done</p>
           </div>
           <div>
-            <h2>12/99</h2>
-            <div>Articles complied to</div>
-          </div>-->
+            <h2>[[_countCompiledArticles(data)]]/[[data.length]]</h2>
+            <p>Articles complied to</p>
+          </div>
         </div>
       </div>
       <div class="column">
@@ -87,7 +118,7 @@
           <div class="toBeCompliant">
             <template is="dom-repeat" items="[[selectedArticle.toBeCompliant]]">
               <template is="dom-if" if="[[item.content]]">
-                <div>[[item.content]]</div>
+                <pre>[[item.content]]</pre>
               </template>
             </template>
           </div>
@@ -104,14 +135,7 @@
           <div class="article">
             <h3>[[selectedArticle.description]]</h3>
             <h3>[[selectedArticle.name]]</h3>
-            <h3>[[selectedArticle.articleContent.title]]</h3>
-            <ol>
-              <template is="dom-repeat" items="[[selectedArticle.articleContent.description]]">
-                <template is="dom-if" if="[[item]]">
-                  <li class="article-term">[[item]]</li>
-                </template>
-              </template>
-            </ol>
+            <pre>[[selectedArticle.articleContent]]</pre>
           </div>
         </template>
       </div>
@@ -213,19 +237,12 @@
           var article = articles.find(function (e) { return e.name === name; }) || articles.push({
             name: name,
             description: row.oversimplifieddescriptionarticlesandrecitals,
-            articleContent: {
-              title: content[0],
-              description: content.slice(1).filter(function (e) { return !!e; }).map(function (e) { return e.replace(/^\d+\./, '').trim(); })
-            },
+            articleContent: row.articlecontent.trim(),
             faqs: [],
             toBeCompliant: []
           }) && articles[articles.length - 1];
 
           if (row.faqs) {
-            // var description = row.faqs.replace(row.faqs.match(/^(.*)$/m)[0], '').trim();
-            // glossary.forEach(function (g) {
-            //   description = description.replace('{{' + g.term + '}}', g.definition);
-            // });
             article.faqs.push({
               title: row.faqs.match(/^(.*)$/m)[0],
               description: row.faqs.replace(row.faqs.match(/^(.*)$/m)[0], '').trim()
@@ -241,6 +258,48 @@
         });
 
         return articles;
+      },
+
+      _countCompiledArticles: function (data) {
+        var count = 0;
+        data.forEach(function (article) {
+          var completed = (article.toBeCompliant || [])
+            .filter(function (e) {
+              return ['na', 'n.a.'].indexOf(e.status.toLowerCase()) !== -1 || parseInt(e.status) === 100
+            }).length;
+          var total = article.toBeCompliant.length;
+
+          if (total !== 0 && completed === total) count++;
+
+        });
+
+        return count;
+      },
+
+      _countChecklistItemsTotal: function () {
+        return this._countChecklistItems(this.data).total;
+      },
+
+      _countChecklistItemsDone: function () {
+        return this._countChecklistItems(this.data).done;
+      },
+
+      _countChecklistItems: function (data) {
+        var total = 0;
+        var done = 0;
+
+        data.forEach(function (article) {
+          var items = article.toBeCompliant;
+          items.forEach(function (item) {
+            if (['na', 'n.a.'].indexOf(item.status) === -1) total++;
+            if (parseInt(item.status) === 100) done++;
+          })
+        });
+
+        return {
+          done: done,
+          total: total
+        };
       }
 
     });
