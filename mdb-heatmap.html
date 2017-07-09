@@ -126,11 +126,19 @@
             },
 
             _calculateStatus: function (article) {
-                var completed = (article.toBeCompliant || [])
-                    .filter(function (e) {
-                        return ['na', 'n.a.'].indexOf(e.status.toLowerCase()) !== -1 || parseInt(e.status) === 100
-                    }).length;
-                var total = article.toBeCompliant.length;
+                var percentages = (article.toBeCompliant || [])
+                    .map(function (e) {
+                        var s = parseInt(e.status);
+                        return ['na', 'n.a.'].indexOf(e.status.toLowerCase()) !== -1 || s === 100 ? 100 : s || 0
+                    });
+                var completed = (function (arr) {
+                    var sum = 0;
+                    arr.forEach(function (a) {
+                        sum += a;
+                    });
+                    return sum;
+                })(percentages);
+                var total = article.toBeCompliant.length * 100;
 
                 return total !== 0 ? ((completed / total) * 100) : 0;
 
