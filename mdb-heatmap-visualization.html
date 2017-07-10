@@ -2,8 +2,12 @@
 <link rel="import" href="../atom-google-sheet-adapter/atom-google-sheet-adapter.html">
 <link rel="import" href="../paper-tabs/paper-tabs.html">
 <link rel="import" href="../paper-tabs/paper-tab.html">
+<link rel="import" href="../paper-radio-button/paper-radio-button.html">
+<link rel="import" href="../mdb-radio-list/mdb-radio-list.html">
 <link rel="import" href="../iron-pages/iron-pages.html">
 <link rel="import" href="mdb-heatmap.html">
+<link rel="import" href="../iron-icons/iron-icons.html">
+<link rel="import" href="../iron-icon/iron-icon.html">
 
 <!--
 `mdb-heatmap-visualization`
@@ -136,6 +140,23 @@
         font-weight: lighter;
         margin-top: 0;
       }
+
+       :host mdb-radio-list {
+        margin-top: var(--standard-padding, 20px);
+      }
+
+       :host paper-radio-button {
+        width: 11.2%;
+        text-align: center;
+      }
+
+       :host iron-icon {
+        color: #aaa;
+      }
+
+       :host .checklist-item.completed iron-icon {
+        color: #5bca52;
+      }
     </style>
     <atom-google-sheet-adapter key="{{key}}"></atom-google-sheet-adapter>
     <div class="container">
@@ -152,6 +173,14 @@
             <p>Articles complied to</p>
           </div>
         </div>
+        <mdb-radio-list selected="{{selectedDuration}}">
+          <paper-radio-button name="feb">Feb</paper-radio-button>
+          <paper-radio-button name="mar">Mar</paper-radio-button>
+          <paper-radio-button name="apr">Apr</paper-radio-button>
+          <paper-radio-button name="may">May</paper-radio-button>
+          <paper-radio-button name="jun">Jun</paper-radio-button>
+          <paper-radio-button name="jul">Jul</paper-radio-button>
+        </mdb-radio-list>
       </div>
       <div class="column faq-column">
         <paper-tabs selected="{{selectedTab}}">
@@ -163,7 +192,9 @@
           <div class="toBeCompliant">
             <template is="dom-repeat" items="[[selectedArticle.toBeCompliant]]">
               <template is="dom-if" if="[[item.content]]">
-                <pre>[[item.content]]</pre>
+                <div class$="checklist-item [[_checkCompleted(item.status)]]">
+                  <pre><iron-icon class="column-identified" icon="icons:check-circle"></iron-icon>[[item.content]]</pre>
+                </div>
               </template>
             </template>
           </div>
@@ -220,6 +251,12 @@
           observer: '_dataChanged'
         },
 
+        _data: {
+          type: Array,
+          value: [],
+          observer: '_rawDataChanged'
+        },
+
         glossary: {
           type: Array,
           value: []
@@ -234,6 +271,12 @@
           type: Object,
           value: {},
           observer: '_selectedArticleChanged'
+        },
+
+        selectedDuration: {
+          type: String,
+          value: 'feb',
+          observer: '_selectedDurationChanged'
         },
 
         selectedTab: {
@@ -251,10 +294,19 @@
       },
 
       _selectedArticleChanged: function () {
+        var that = this;
         var heatMap = this.querySelector('mdb-heatmap');
+        var index = this.data.findIndex(function (e) {
+          return e.name === that.selectedArticle.name;
+        });
+        this.selected = index + 1;
         if (this.data && this.data.length && heatMap) {
           heatMap._highlight(this.selectedArticle);
         }
+      },
+
+      _checkCompleted: function (status) {
+        return status == 100 ? 'completed' : '';
       },
 
       _keyChanged: function () {
@@ -266,12 +318,40 @@
               setTimeout(function () {
                 var model = data[0],
                   glossary = data[1];
-                that.set('data', that._transform(model));
+                that.set('_data', that._transform(model));
                 that.set('glossary', glossary);
-                that.set('selectedArticle', that.data[that.selected - 1]);//Select first article by default
               }, 0);
             });
         }
+      },
+
+      _rawDataChanged: function () {
+        this.set('data', this._getDurationData(this.selectedDuration));
+      },
+
+      _getDurationData: function (duration) {
+        var map = {
+          feb: 1,
+          mar: 2,
+          apr: 3,
+          may: 4,
+          jun: 5,
+          jul: 6
+        };
+        return this._data
+          .map(function (e) {
+            e.toBeCompliant
+              .map(function (c) {
+                c.status = c['status' + map[duration]];
+                return c;
+              });
+            return e;
+          });
+      },
+
+      _selectedDurationChanged: function () {
+        this.set('data', this._getDurationData(this.selectedDuration));
+        this.set('selectedArticle', this.data[this.selected - 1]);
       },
 
       _fetchData: function () {
@@ -294,9 +374,12 @@
       },
 
       _dataChanged: function () {
-        var heatMap = this.querySelector('mdb-heatmap');
-        if (this.data && this.data.length && heatMap) {
-          heatMap.render();
+        if (this.data && this.data.length) {
+          var heatMap = this.querySelector('mdb-heatmap');
+          if (heatMap) {
+            heatMap.render();
+          }
+          this.set('selectedArticle', this.data[this.selected - 1]);
         }
       },
 
@@ -324,7 +407,12 @@
           if (row.whatitmeansoutcomestobecompliantmodeltobecompliantmycompanycontrollermust) {
             article.toBeCompliant.push({
               content: row.whatitmeansoutcomestobecompliantmodeltobecompliantmycompanycontrollermust,
-              status: row.status
+              status1: row.status,
+              status2: row.status2,
+              status3: row.status3,
+              status4: row.status4,
+              status5: row.status5,
+              status6: row.status6
             });
           }
         });
