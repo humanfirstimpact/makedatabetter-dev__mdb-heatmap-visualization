@@ -17,6 +17,12 @@
     <style>
        :host {
         display: block;
+        background-color: #fff;
+      }
+
+       :host h2 {
+        margin-top: 0;
+        line-height: initial;
       }
 
        :host paper-tabs {
@@ -30,28 +36,37 @@
       }
 
        :host .column {
-        flex: 1;
-        width: 33%;
-        margin: var(--standard-padding, 20px);
         margin-right: 0;
-      }
-
-       :host .column:nth-child(3) {
-        margin-right: var(--standard-padding, 20px);
       }
 
        :host .column.chart {
         background-color: #fff;
-        padding: var(--standard-padding, 20px);
         padding-right: 0;
       }
 
+       :host .faq-column {
+        flex: 1;
+      }
+
        :host .article-column {
+        flex: 1;
         background-color: #fff9c5;
+        margin-left: var(--standard-padding, 20px);
       }
 
        :host .article {
         padding: var(--standard-padding, 20px);
+      }
+
+       :host .article h3.title {
+        font-size: 18px;
+      }
+
+       :host .article h3.article-description {
+        font-size: 14px;
+        font-style: italic;
+        font-weight: 500;
+        margin-top: 0;
       }
 
        :host .article ol {
@@ -65,14 +80,19 @@
        :host .toBeCompliant,
        :host .faq,
        :host .glossary {
-        padding-top: var(--standard-padding, 20px);
+        padding-left: 15px;
         height: 80vh;
         overflow-y: auto;
+        font-size: 12px;
+        padding-right: 20px;
+        margin-top: 20px;
       }
 
        :host .article pre {
         height: 70vh;
         overflow-y: auto;
+        font-size: 12px;
+        padding-right: 20px;
       }
 
        :host .faq h3,
@@ -89,6 +109,7 @@
        :host pre {
         white-space: pre-wrap;
         font-family: 'Roboto', 'Noto', sans-serif;
+        margin-top: 0;
       }
 
        :host .gdpr-metrics {
@@ -129,7 +150,7 @@
           </div>
         </div>
       </div>
-      <div class="column">
+      <div class="column faq-column">
         <paper-tabs selected="{{selectedTab}}">
           <paper-tab>TO BE COMPLIANT</paper-tab>
           <paper-tab>FAQS</paper-tab>
@@ -160,8 +181,8 @@
       <div class="column article-column">
         <template is="dom-if" if="[[selectedArticle]]">
           <div class="article">
-            <h3>[[selectedArticle.description]]</h3>
-            <h3>[[selectedArticle.name]]</h3>
+            <h3 class="article-description">[[selectedArticle.description]]</h3>
+            <h3 class="title">[[selectedArticle.name]]</h3>
             <pre>[[selectedArticle.articleContent]]</pre>
           </div>
         </template>

@@ -126,13 +126,13 @@
 
             _highlight: function (article) {
                 var index = this.data.findIndex(function (e) {
-                        return e.name === article.name;
-                    });
+                    return e.name === article.name;
+                });
 
                 if (index !== -1) {
                     var all = this.svg.selectAll('rect');
                     all.style('stroke', '#fff');
-                    all[0][index].style['stroke'] = 'orange';
+                    all[0][index].style['stroke'] = '#5da9dd';
                 }
             },
 
