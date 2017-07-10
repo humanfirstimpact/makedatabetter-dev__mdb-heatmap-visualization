@@ -2,6 +2,8 @@
 <link rel="import" href="../atom-google-sheet-adapter/atom-google-sheet-adapter.html">
 <link rel="import" href="../paper-tabs/paper-tabs.html">
 <link rel="import" href="../paper-tabs/paper-tab.html">
+<link rel="import" href="../paper-radio-button/paper-radio-button.html">
+<link rel="import" href="../mdb-radio-list/mdb-radio-list.html">
 <link rel="import" href="../iron-pages/iron-pages.html">
 <link rel="import" href="mdb-heatmap.html">
 
@@ -43,7 +45,6 @@
        :host .column.chart {
         background-color: #fff;
         padding: var(--standard-padding, 20px);
-        padding-right: 0;
       }
 
        :host .article-column {
@@ -97,7 +98,6 @@
         text-align: center;
         border: 1px solid #f7fafe;
         margin-top: var(--standard-padding, 20px);
-        width: 300px;
       }
 
        :host .gdpr-metrics h2 {
@@ -111,6 +111,15 @@
        :host .gdpr-metrics p {
         color: #cacdd5;
         font-size: 15px;
+      }
+
+       :host mdb-radio-list {
+        margin-top: var(--standard-padding, 20px);
+      }
+
+       :host paper-radio-button {
+        width: 12.3%;
+        text-align: center;
       }
     </style>
     <atom-google-sheet-adapter key="{{key}}"></atom-google-sheet-adapter>
@@ -128,6 +137,14 @@
             <p>Articles complied to</p>
           </div>
         </div>
+        <mdb-radio-list selected="{{selectedDuration}}">
+          <paper-radio-button name="feb">Feb</paper-radio-button>
+          <paper-radio-button name="mar">Mar</paper-radio-button>
+          <paper-radio-button name="apr">Apr</paper-radio-button>
+          <paper-radio-button name="may">May</paper-radio-button>
+          <paper-radio-button name="jun">Jun</paper-radio-button>
+          <paper-radio-button name="jul">Jul</paper-radio-button>
+        </mdb-radio-list>
       </div>
       <div class="column">
         <paper-tabs selected="{{selectedTab}}">
@@ -196,6 +213,12 @@
           observer: '_dataChanged'
         },
 
+        _data: {
+          type: Array,
+          value: [],
+          observer: '_rawDataChanged'
+        },
+
         glossary: {
           type: Array,
           value: []
@@ -210,6 +233,11 @@
           type: Object,
           value: {},
           observer: '_selectedArticleChanged'
+        },
+
+        selectedDuration: {
+          type: String,
+          value: 'feb'
         },
 
         selectedTab: {
@@ -242,12 +270,19 @@
               setTimeout(function () {
                 var model = data[0],
                   glossary = data[1];
-                that.set('data', that._transform(model));
+                that.set('_data', that._transform(model));
                 that.set('glossary', glossary);
-                that.set('selectedArticle', that.data[that.selected - 1]);//Select first article by default
               }, 0);
             });
         }
+      },
+
+      _rawDataChanged: function () {
+
+      },
+
+      _getDurationData: function () {
+
       },
 
       _fetchData: function () {
@@ -270,9 +305,12 @@
       },
 
       _dataChanged: function () {
-        var heatMap = this.querySelector('mdb-heatmap');
-        if (this.data && this.data.length && heatMap) {
-          heatMap.render();
+        if (this.data && this.data.length) {
+          var heatMap = this.querySelector('mdb-heatmap');
+          if (heatMap) {
+            heatMap.render();
+          }
+          this.set('selectedArticle', this.data[this.selected - 1]);
         }
       },
 
@@ -300,7 +338,12 @@
           if (row.whatitmeansoutcomestobecompliantmodeltobecompliantmycompanycontrollermust) {
             article.toBeCompliant.push({
               content: row.whatitmeansoutcomestobecompliantmodeltobecompliantmycompanycontrollermust,
-              status: row.status
+              status: row.status,
+              status2: row.status2,
+              status3: row.status3,
+              status4: row.status4,
+              status5: row.status5,
+              status6: row.status6
             });
           }
         });
