@@ -48,7 +48,7 @@
                 height: {
                     type: Number,
                     value: 350
-                }
+                },
             },
 
             ready: function () {
@@ -94,8 +94,7 @@
                         .attr("height", gridSize)
                         .style("fill", colors[0])
                         .on('click', function (data) {
-                            that.svg.selectAll('rect').style('stroke', '#fff');
-                            this.style['stroke'] = 'orange';
+                            that._highlight(data);
                             that.fire('article-changed', data);
                         });
 
@@ -122,6 +121,18 @@
                     cards.select("title").text(function (d) { return d.status; });
 
                     cards.exit().remove();
+                }
+            },
+
+            _highlight: function (article) {
+                var index = this.data.findIndex(function (e) {
+                        return e.name === article.name;
+                    });
+
+                if (index !== -1) {
+                    var all = this.svg.selectAll('rect');
+                    all.style('stroke', '#fff');
+                    all[0][index].style['stroke'] = 'orange';
                 }
             },
 

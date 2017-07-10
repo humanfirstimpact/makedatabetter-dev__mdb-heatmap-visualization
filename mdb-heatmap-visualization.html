@@ -201,9 +201,15 @@
           value: []
         },
 
+        selected: {
+          type: Number,
+          value: 1
+        },
+
         selectedArticle: {
           type: Object,
-          value: {}
+          value: {},
+          observer: '_selectedArticleChanged'
         },
 
         selectedTab: {
@@ -220,6 +226,13 @@
         this.selectedArticle = e.detail;
       },
 
+      _selectedArticleChanged: function () {
+        var heatMap = this.querySelector('mdb-heatmap');
+        if (this.data && this.data.length && heatMap) {
+          heatMap._highlight(this.selectedArticle);
+        }
+      },
+
       _keyChanged: function () {
         if (this.key) {
           var that = this;
@@ -231,7 +244,7 @@
                   glossary = data[1];
                 that.set('data', that._transform(model));
                 that.set('glossary', glossary);
-                that.selectedArticle = that.data[0];//Select first article by default
+                that.set('selectedArticle', that.data[that.selected - 1]);//Select first article by default
               }, 0);
             });
         }
@@ -258,7 +271,9 @@
 
       _dataChanged: function () {
         var heatMap = this.querySelector('mdb-heatmap');
-        if (heatMap) heatMap.render();
+        if (this.data && this.data.length && heatMap) {
+          heatMap.render();
+        }
       },
 
       _transform: function (model) {
