@@ -294,14 +294,16 @@
       },
 
       _selectedArticleChanged: function () {
-        var that = this;
-        var heatMap = this.querySelector('mdb-heatmap');
-        var index = this.data.findIndex(function (e) {
-          return e.name === that.selectedArticle.name;
-        });
-        this.selected = index + 1;
-        if (this.data && this.data.length && heatMap) {
-          heatMap._highlight(this.selectedArticle);
+        if (this.selectedArticle && this.selectedArticle.name) {
+          var that = this;
+          var heatMap = this.querySelector('mdb-heatmap');
+          var index = this.data.findIndex(function (e) {
+            return e.name === that.selectedArticle.name;
+          });
+          this.selected = index + 1;
+          if (this.data && this.data.length && heatMap) {
+            heatMap._highlight(this.selectedArticle);
+          }
         }
       },
 
@@ -350,8 +352,10 @@
       },
 
       _selectedDurationChanged: function () {
-        this.set('data', this._getDurationData(this.selectedDuration));
-        this.set('selectedArticle', this.data[this.selected - 1]);
+        if (this.selectedArticle.name) {
+          this.set('data', this._getDurationData(this.selectedDuration));
+          this.set('selectedArticle', JSON.parse(JSON.stringify(this.data[this.selected - 1])));
+        }
       },
 
       _fetchData: function () {
