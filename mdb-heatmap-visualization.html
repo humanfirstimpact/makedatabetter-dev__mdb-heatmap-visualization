@@ -146,7 +146,7 @@
       }
 
        :host paper-radio-button {
-         
+
         width: 11%;
         text-align: center;
       }
@@ -312,7 +312,7 @@
       },
 
       _checkCompleted: function (status) {
-        return status == 100 ? 'completed' : '';
+        return ['na', 'n.a.'].indexOf(status.toLowerCase()) !== -1 || parseInt(status) == 100 ? 'completed' : '';
       },
 
       _keyChanged: function () {
