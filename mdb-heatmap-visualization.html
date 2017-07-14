@@ -5,9 +5,11 @@
 <link rel="import" href="../paper-radio-button/paper-radio-button.html">
 <link rel="import" href="../mdb-radio-list/mdb-radio-list.html">
 <link rel="import" href="../iron-pages/iron-pages.html">
-<link rel="import" href="mdb-heatmap.html">
 <link rel="import" href="../iron-icons/iron-icons.html">
 <link rel="import" href="../iron-icon/iron-icon.html">
+<link rel="import" href="mdb-heatmap-behavior.html">
+<link rel="import" href="mdb-heatmap.html">
+<link rel="import" href="mdb-heatmap-faq.html">
 
 <!--
 `mdb-heatmap-visualization`
@@ -203,9 +205,8 @@
             </template>
           </div>
           <div class="faq">
-            <template id="faqRepeater" is="dom-repeat" items="[[selectedArticle.faqs]]">
-              <h3>[[item.title]]</h3>
-              <div>[[item.description]]</div>
+            <template id="faqRepeater" is="dom-repeat" items="[[selectedArticle.faqs]]" restamp>
+              <mdb-heatmap-faq question="[[item.title]]" answer="[[item.description]]"></mdb-heatmap-faq>
             </template>
           </div>
           <div class="glossary">
@@ -289,41 +290,19 @@
         }
       },
 
+      behaviors: [
+        Mdb.heatmap
+      ],
+
       listeners: {
         'article-changed': '_articleChanged'
       },
 
       attached: function () {
-        this.$.complianceRepeater.addEventListener('dom-change', this._setupLinks);
-        this.$.faqRepeater.addEventListener('dom-change', this._setupLinks);
-
-        this.addEventListener('tap', function (e) {
-          if (e.target.classList.contains('anchor')) {
-            var href = this._getId(e.target.innerText);
-
-            this._gotoGlossary();
-            this.querySelector('#' + href).scrollIntoView();
-          }
+        this.addEventListener('go-to-glossary', function (e) {
+          this._gotoGlossary();
+          this.querySelector('#' + e.detail).scrollIntoView();
         });
-      },
-
-      _setupLinks: function () {
-        if (this.parentNode) {
-          var matches = this.parentNode.innerHTML.match(/\{{[a-zA-Z0-9\s]+}}/g),
-            html = this.parentNode.innerHTML;
-          if (matches) {
-
-            matches.forEach(function (m) {
-              html = html.replace(m, '<a href="javascript:void(0);" class="anchor">' + m.match(/[a-zA-Z0-9\s]+/)[0] + '</a>')
-            });
-
-            this.parentNode.innerHTML = html;
-          }
-        }
-      },
-
-      _getId: function (term) {
-        return term.replace(/\s/g, '_');
       },
 
       _gotoGlossary: function () {
