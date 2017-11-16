@@ -27,7 +27,7 @@
                 fill: #000;
             }
         </style>
-        <div id="chart"></div>
+        <div id="heatMapContainer"></div>
     </template>
 
     <script>
@@ -52,11 +52,11 @@
             },
 
             ready: function () {
-                this.scopeSubtree(this.$.chart, true);
+                this.scopeSubtree(this.$.heatMapContainer, true);
             },
 
             attached: function () {
-                this.svg = d3.select("#chart").append("svg")
+                this.svg = d3.select("#heatMapContainer").append("svg")
                     .attr("width", this.width)
                     .attr("height", this.height)
                     .append("g");

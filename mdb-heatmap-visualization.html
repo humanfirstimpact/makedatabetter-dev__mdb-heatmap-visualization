@@ -340,6 +340,7 @@
       _keyChanged: function () {
         if (this.key) {
           var that = this;
+          this.fire('dataload-begin');
           this._fetchData()
             .then(function (data) {
               that.dataLoaded = true;
@@ -349,6 +350,9 @@
                 that.set('_data', that._transform(model));
                 that.set('glossary', glossary);
               }, 0);
+            })
+            .then(function(){
+              that.fire('dataload-end');
             });
         }
       },
