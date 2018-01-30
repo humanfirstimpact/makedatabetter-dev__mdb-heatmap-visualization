@@ -22,117 +22,109 @@
 <dom-module id="mdb-heatmap-visualization">
   <template>
     <style>
-       :host {
+      :host {
         display: block;
-        background-color: #fff;
-        @apply(--paper-font-common-base);
+        color: var( --mdb-secondary-text-dark, #000);
+        background-color: var(--app-white-color, #fff);
+        font-size: var(--mdb-medium-font, 14px);
+
+        --mdb-radio-list-container: {
+          @apply(--layout-horizontal);
+        }
       }
 
-       :host h2 {
+      :host h2 {
         margin-top: 0;
         line-height: initial;
         font-size: 21px;
+        font-weight: 400;
+        color: var( --mdb-primary-text-dark, #000);
       }
 
-       :host paper-tabs {
-        border-bottom: 1px solid #dfdfdf;
+      :host paper-tabs {
+        border-bottom: 1px solid var(--mdb-border-color, #444444);
       }
 
-       :host .legal-compliance-container {
-        display: flex;
-        justify-content: center;
-        flex-wrap: nowrap;
+      :host .legal-compliance-container {
+        @apply(--layout-horizontal);
       }
 
-       :host .column {
-        margin-right: 0;
+      :host .column {
+        -ms-flex: 1 1 33%;
+        -webkit-flex: 1 1 33%;
+        flex: 1 1 33%;
+        max-height: 90vh;
+        overflow: auto;
+        padding: var(--standard-spacing, 20px);
       }
 
-       :host .column.chart {
-        background-color: #fff;
-        padding-right: 0;
+      .legal-compliance-container>.chart {
+        padding: var(--standard-spacing, 20px) 0 var(--standard-spacing, 20px) var(--standard-spacing, 20px);
       }
 
-       :host .faq-column {
-        flex: 1;
+      :host .article-column {
+        background-color: #fff9c3;
+      }
+
+      :host .column.faq-column {
+        padding-top: 0;
+      }
+
+      :host .article {
         color: var(--mdb-primary-text-dark, #000);
       }
 
-       :host .article-column {
-        flex: 1;
-        background-color: #fff9c5;
-        margin-left: var(--standard-padding, 20px);
-      }
-
-       :host .article {
-        padding: var(--standard-padding, 20px);
-        color: var(--mdb-primary-text-dark, #000);
-      }
-
-       :host .article h3.title {
+      :host .article h3.title {
         font-size: 18px;
       }
 
-       :host .article h3.article-description {
-        font-size: 14px;
-        font-style: italic;
-        font-weight: 500;
+      :host .article h3.article-description {
+        font-weight: 400;
         margin-top: 0;
       }
 
-       :host .article ol {
+      :host .article ol {
         padding-left: 0;
       }
 
-       :host .article-term {
+      :host .article-term {
         margin-bottom: var(--standard-padding, 20px);
       }
 
-       :host .toBeCompliant,
-       :host .faq,
-       :host .glossary {
-        padding-left: 15px;
-        height: 80vh;
-        overflow-y: auto;
-        font-size: 12px;
-        padding-right: 20px;
-        margin-top: 20px;
+      :host iron-pages {
+        padding: var(--standar-padding, 20px) 0 0;
       }
 
-       :host .article pre {
-        height: 70vh;
-        overflow-y: auto;
-        font-size: 12px;
-        padding-right: 20px;
-      }
-
-       :host .faq h3,
-       :host .glossary h3 {
+      :host .faq h3,
+      :host .glossary h3 {
+        margin-top: 5px;
         margin-bottom: 5px;
-        margin-top: var(--standard-padding, 20px);
       }
 
-       :host .faq h3:nth-child(1),
-       :host .glossary h3:nth-child(1) {
+      :host .faq h3:nth-child(1),
+      :host .glossary h3:nth-child(1) {
         margin-top: 0;
       }
 
-       :host pre {
+      :host pre {
         white-space: pre-wrap;
         font-family: 'Roboto', 'Noto', sans-serif;
         margin-top: 0;
+        margin-bottom: 5px;
       }
 
-       :host .gdpr-metrics {
-        display: flex;
-        justify-content: space-around;
-        text-align: center;
-        border: 1px solid #e0e8ed;
+      :host .gdpr-metrics {
+        @apply(--layout);
+        border: 1px solid var(--mdb-border-color, #333);
         margin-top: var(--standard-padding, 20px);
-        width: 330px;
       }
 
-       :host .gdpr-metrics h2 {
+      :host .gdpr-metrics>div {
+        @apply(--layout-flex);
+        text-align: center;
+      }
+
+      :host .gdpr-metrics h2 {
         margin: 0;
         font-size: 40px;
         color: var(--mdb-accent-color-highlight, #5DA9DD);
@@ -141,38 +133,37 @@
         margin-top: 15px;
       }
 
-       :host .gdpr-metrics p {
-        color: #cacdd5;
+      :host .gdpr-metrics p {
         font-size: 15px;
         font-weight: lighter;
         margin-top: 0;
-        color: var(--mdb-disabled-text-dark, #000);
       }
 
-       :host mdb-radio-list {
+      :host mdb-radio-list {
         margin-top: var(--standard-padding, 20px);
       }
 
-       :host paper-radio-button {
-
-        width: 11%;
+      :host paper-radio-button {
+        font-size: 14px;
+        @apply(--layout-flex);
         text-align: center;
+        padding: 15px 10px;
       }
 
-       :host iron-icon {
-        color: #aaa;
+      :host iron-icon {
+        color: var(--app-icon-color, #99a1b3);
         padding-right: 7px;
         height: 16px;
         width: 16px;
       }
 
-       :host .checklist-item.completed iron-icon {
+      :host .checklist-item.completed iron-icon {
         color: #5bca52;
       }
     </style>
     <atom-google-sheet-adapter key="{{key}}"></atom-google-sheet-adapter>
     <div class="legal-compliance-container">
-      <div class="column chart">
+      <div class=" chart">
         <h2>Your GDPR Story</h2>
         <mdb-heatmap data="[[data]]"></mdb-heatmap>
         <div class="gdpr-metrics">
@@ -185,7 +176,7 @@
             <p>Articles complied to</p>
           </div>
         </div>
-        <mdb-radio-list selected="{{selectedDuration}}">
+        <mdb-radio-list selected="{{selectedDuration}}" size="small">
           <paper-radio-button name="feb">FEB</paper-radio-button>
           <paper-radio-button name="mar">MAR</paper-radio-button>
           <paper-radio-button name="apr">APR</paper-radio-button>
@@ -351,7 +342,7 @@
                 that.set('glossary', glossary);
               }, 0);
             })
-            .then(function(){
+            .then(function () {
               that.fire('dataload-end');
             });
         }
