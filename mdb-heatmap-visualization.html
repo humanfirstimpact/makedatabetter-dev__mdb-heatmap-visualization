@@ -129,7 +129,6 @@
         font-size: 40px;
         color: var(--mdb-accent-color-highlight, #5DA9DD);
         font-weight: 400;
-        text-shadow: 0 0 10px;
         margin-top: 15px;
       }
 
@@ -155,6 +154,16 @@
         padding-right: 7px;
         height: 16px;
         width: 16px;
+        margin-top: 3px;
+      }
+
+      .checklist-item {
+        @apply(--layout-horizontal);
+        @apply(--layout-start);
+      }
+
+      .checklist-item pre {
+        @apply(--layout-flex);
       }
 
       :host .checklist-item.completed iron-icon {
@@ -176,7 +185,7 @@
             <p>Articles complied to</p>
           </div>
         </div>
-        <mdb-radio-list selected="{{selectedDuration}}" size="small">
+        <mdb-radio-list selected="{{selectedDuration}}">
           <paper-radio-button name="feb">FEB</paper-radio-button>
           <paper-radio-button name="mar">MAR</paper-radio-button>
           <paper-radio-button name="apr">APR</paper-radio-button>
@@ -196,7 +205,8 @@
             <template id="complianceRepeater" is="dom-repeat" items="[[selectedArticle.toBeCompliant]]">
               <template is="dom-if" if="[[item.content]]">
                 <div class$="checklist-item [[_checkCompleted(item.status)]]">
-                  <pre><iron-icon icon="icons:check-circle"></iron-icon>[[item.content]]</pre>
+                  <iron-icon icon="icons:check-circle"></iron-icon>
+                  <pre>[[item.content]]</pre>
                 </div>
               </template>
             </template>
