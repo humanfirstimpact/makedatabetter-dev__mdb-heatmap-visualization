@@ -4,26 +4,30 @@
 <dom-module id="mdb-heatmap">
     <template>
         <style>
-             :host {
+            :host {
                 display: block;
             }
 
-             :host rect.bordered {
+            :host rect.bordered {
                 stroke: #fff;
                 stroke-width: 3px;
             }
 
-             :host text.mono {
+            :host text.mono {
                 font-size: 9pt;
                 font-family: Consolas, courier;
                 fill: #aaa;
             }
 
-             :host text.axis-workweek {
+            :host svg {
+                width: 335px;
+            }
+
+            :host text.axis-workweek {
                 fill: #000;
             }
 
-             :host text.axis-worktime {
+            :host text.axis-worktime {
                 fill: #000;
             }
         </style>
