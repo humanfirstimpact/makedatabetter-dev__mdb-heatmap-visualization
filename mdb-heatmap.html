@@ -8,6 +8,16 @@
                 display: block;
             }
 
+            :host text {
+                fill: var(--mdb-primary-text-dark);
+            }
+
+            :host text,
+            rect {
+                font-size: 10px;
+                cursor: pointer;
+            }
+
             :host rect.bordered {
                 stroke: #fff;
                 stroke-width: 3px;
@@ -92,13 +102,16 @@
                         ];
 
                     var cards = this.svg.selectAll(".hour")
-                        .data(data, function (d) { return d.row + ':' + d.col; });
+                        .data(data, function (d) {
+                            return d.row + ':' + d.col;
+                        });
 
                     cards.append("title");
 
                     cards.enter().append("rect")
-                        .attr("x", function (d) { return (d.col * (gridSize + 3)) + 5; })
-                        .attr("y", function (d) { return (d.row * (gridSize + 3)) + 5; })
+                        .attr("y", function (d) { return (d.col * (gridSize + 3)) + 5; })
+                        .attr("x", function (d) { return (d.row * (gridSize + 3)) + 5; })
+                        .attr("title", function (d) { return d.col + 1 == 10 ? (d.row + 1) + '0' : d.row + '' + (d.col + 1) })
                         .attr("class", "hour bordered")
                         .attr("width", gridSize)
                         .attr("height", gridSize)
@@ -125,6 +138,18 @@
                             }
                             return colors[color];
                         });
+
+                    cards.enter().append('text')
+                        .text(function (d) { return d.col + 1 == 10 ? (d.row + 1) + '0' : d.row + '' + (d.col + 1) })
+                        .attr("y", function (d) { return (d.col * (gridSize + 3)) + 20; })
+                        .attr("x", function (d) { return (d.row * (gridSize + 3)) + 10; })
+                        .attr("width", gridSize)
+                        .attr("height", gridSize)
+                        .on('click', function (data) {
+                            that._highlight(data);
+                            that.fire('article-changed', data);
+                        });
+
 
                     cards.select("title").text(function (d) { return d.status; });
 
