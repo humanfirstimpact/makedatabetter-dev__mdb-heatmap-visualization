@@ -1,0 +1,140 @@
+<link rel="import" href="../polymer/polymer.html">
+
+<dom-module id="mdb-detailed-heatmap">
+    <template>
+        <style>
+            .articlesGrid{
+                width: 1240px;
+                display: flex;
+                flex-wrap: wrap;
+                margin: auto;
+                color: black;
+                font-size: 12px;
+                height: 800px;
+                flex-direction: column;
+                align-content: center;
+            }
+
+            .articleCell{
+                width: 114px;
+                height: 60px;
+                padding: 10px;
+                padding-right: 0px;
+            }
+
+            .articleNumberPercentageRow{
+                display: flex;
+                justify-content: space-between;
+                padding-right: 10px;
+            }
+
+            .legend{
+                display: flex;
+                width: 1240px;
+            }
+
+            .colorBox{
+                flex-grow: 1;
+                height: 50px;
+                margin-top: 20px;
+            }
+
+            .categoryName{
+                margin-top: 10px;
+                font-size: 12px;
+                flex-basis: 0;
+                flex-grow: 1;
+                text-align: center;
+                font-weight: 500;
+            }
+        </style>
+
+        <div class='articlesGrid'>
+            <template is='dom-repeat' items="[[_articles]]">
+                <template is='dom-if' if="{{_isTrackMode(detailType)}}">
+                    <div class='articleCell' style$='background-color: [[item.color]]'>
+                        <div class='articleNumberPercentageRow'>
+                            <span>[[item.id]]</span>
+                            <span>[[item.status]]%</span>
+                        </div>
+                        {{item.periodicTableInfo.abbreviatedname}}
+                    </div>
+                </template>
+                <template is='dom-if' if="{{!_isTrackMode(detailType)}}">
+                    <div class='articleCell' 
+                    style$='background-color: [[item.periodicTableInfo.categoryColors.background]];
+                        color: [[item.periodicTableInfo.categoryColors.text]]'>
+                        <div class='articleNumberPercentageRow'>
+                            <span>[[item.id]]</span>
+                            <span>[[item.status]]%</span>
+                        </div>
+                        {{item.periodicTableInfo.abbreviatedname}}
+                    </div>
+                </template>
+            </template>
+        </div>
+        <template is='dom-if' if="{{!_isTrackMode(detailType)}}">
+            <div class='legend'>
+                <template is='dom-repeat' items='[[_filteredCategoryColors]]'>
+                    <div class='colorBox' style$="background-color: [[item.value]]"></div>
+                </template>
+            </div>
+            <div class='legend'>
+                <template is='dom-repeat' items='[[_filteredCategoryColors]]'>
+                    <div class='categoryName' style$="color: [[item.value]];">[[item.category]]</div>
+                </template>
+            </div>
+        </template>
+
+    </template>
+
+    <script>
+        Polymer({
+            is: 'mdb-detailed-heatmap',
+            properties: {
+                articles: {
+                    type: Array,
+                    value: [],
+                    observer: '_articlesChanged'
+                },
+
+                detailType: {
+                    type: String,
+                    value: 'track'
+                },
+
+                categoryColors: {
+                    type: Array,
+                    value: [],
+                    observer: '_categoryColorsChanged'
+                },
+
+                _filteredCategoryColors: {
+                    type: Array,
+                    value: []
+                }
+            },
+
+            _isTrackMode: function(){
+                return this.detailType == 'track';
+            },
+
+            _articlesChanged: function(){
+                this._articles = [];
+                this.async(function(){
+                    this._articles = this.articles;
+                }.bind(this));
+            },
+
+            _categoryColorsChanged: function(){
+                this._filteredCategoryColors = [];
+                
+                this.async(function(){
+                    this._filteredCategoryColors = this.categoryColors.filter(function(categoryColor){
+                        return categoryColor.area.trim().toLowerCase() == 'background';
+                    });
+                }.bind(this));
+            }
+        });
+    </script>
+</dom-module>

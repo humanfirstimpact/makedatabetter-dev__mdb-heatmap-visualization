@@ -10,6 +10,7 @@
 <link rel="import" href="../paper-styles/typography.html">
 <link rel="import" href="mdb-heatmap-behavior.html">
 <link rel="import" href="mdb-heatmap.html">
+<link rel="import" href="mdb-detailed-heatmap.html">
 <link rel="import" href="mdb-heatmap-faq.html">
 
 <!--
@@ -22,216 +23,312 @@
 <dom-module id="mdb-heatmap-visualization">
   <template>
     <style>
-       :host {
+      :host {
         display: block;
-        background-color: #fff;
-        @apply(--paper-font-common-base);
+        color: var( --mdb-secondary-text-dark, #000);
+        background-color: var(--app-white-color, #fff);
+        font-size: var(--mdb-medium-font, 14px);
+        width: 1240px;
+        --mdb-radio-list-container: {
+          @apply(--layout-horizontal);
+        }
       }
 
-       :host h2 {
+      :host h2 {
         margin-top: 0;
         line-height: initial;
         font-size: 21px;
+        font-weight: 400;
+        color: var( --mdb-primary-text-dark, #000);
       }
 
-       :host paper-tabs {
-        border-bottom: 1px solid #dfdfdf;
+      :host paper-tabs {
+        border-bottom: 1px solid var(--mdb-border-color, #444444);
       }
 
-       :host .legal-compliance-container {
-        display: flex;
-        justify-content: center;
-        flex-wrap: nowrap;
+      :host .summary {
+        @apply(--layout-horizontal);
+        max-height: 700px;
       }
 
-       :host .column {
-        margin-right: 0;
+      :host .column {
+        -ms-flex: 1 1 33%;
+        -webkit-flex: 1 1 33%;
+        flex: 1 1 33%;
+        overflow: auto;
+        padding: var(--standard-spacing, 20px);
       }
 
-       :host .column.chart {
-        background-color: #fff;
-        padding-right: 0;
+      .summary .chart {
+        padding: var(--standard-spacing, 20px) 0 var(--standard-spacing, 20px) var(--standard-spacing, 20px);
       }
 
-       :host .faq-column {
-        flex: 1;
+      :host .article-column {
+        background-color: #fff9c3;
+      }
+
+      :host .column.faq-column {
+        padding-top: 0;
+      }
+
+      :host .article {
         color: var(--mdb-primary-text-dark, #000);
       }
 
-       :host .article-column {
-        flex: 1;
-        background-color: #fff9c5;
-        margin-left: var(--standard-padding, 20px);
-      }
-
-       :host .article {
-        padding: var(--standard-padding, 20px);
-        color: var(--mdb-primary-text-dark, #000);
-      }
-
-       :host .article h3.title {
+      :host .article h3.title {
         font-size: 18px;
       }
 
-       :host .article h3.article-description {
-        font-size: 14px;
-        font-style: italic;
-        font-weight: 500;
+      :host .article h3.article-description {
+        font-weight: 400;
         margin-top: 0;
       }
 
-       :host .article ol {
+      :host .article ol {
         padding-left: 0;
       }
 
-       :host .article-term {
+      :host .article-term {
         margin-bottom: var(--standard-padding, 20px);
       }
 
-       :host .toBeCompliant,
-       :host .faq,
-       :host .glossary {
-        padding-left: 15px;
-        height: 80vh;
-        overflow-y: auto;
-        font-size: 12px;
-        padding-right: 20px;
-        margin-top: 20px;
+      :host iron-pages {
+        padding: var(--standar-padding, 20px) 0 0;
       }
 
-       :host .article pre {
-        height: 70vh;
-        overflow-y: auto;
-        font-size: 12px;
-        padding-right: 20px;
-      }
-
-       :host .faq h3,
-       :host .glossary h3 {
+      :host .faq h3,
+      :host .glossary h3 {
+        margin-top: 5px;
         margin-bottom: 5px;
-        margin-top: var(--standard-padding, 20px);
       }
 
-       :host .faq h3:nth-child(1),
-       :host .glossary h3:nth-child(1) {
+      :host .faq h3:nth-child(1),
+      :host .glossary h3:nth-child(1) {
         margin-top: 0;
       }
 
-       :host pre {
+      :host pre {
         white-space: pre-wrap;
         font-family: 'Roboto', 'Noto', sans-serif;
         margin-top: 0;
+        margin-bottom: 5px;
       }
 
-       :host .gdpr-metrics {
-        display: flex;
-        justify-content: space-around;
-        text-align: center;
-        border: 1px solid #e0e8ed;
+      :host .gdpr-metrics {
+        @apply(--layout);
+        border: 1px solid var(--mdb-border-color, #333);
         margin-top: var(--standard-padding, 20px);
-        width: 330px;
       }
 
-       :host .gdpr-metrics h2 {
+      :host .gdpr-metrics>div {
+        @apply(--layout-flex);
+        text-align: center;
+      }
+
+      :host .gdpr-metrics h2 {
         margin: 0;
         font-size: 40px;
         color: var(--mdb-accent-color-highlight, #5DA9DD);
         font-weight: 400;
-        text-shadow: 0 0 10px;
         margin-top: 15px;
       }
 
-       :host .gdpr-metrics p {
-        color: #cacdd5;
+      :host .gdpr-metrics p {
         font-size: 15px;
         font-weight: lighter;
         margin-top: 0;
-        color: var(--mdb-disabled-text-dark, #000);
       }
 
-       :host mdb-radio-list {
+      :host mdb-radio-list {
         margin-top: var(--standard-padding, 20px);
       }
 
-       :host paper-radio-button {
-
-        width: 11%;
+      :host paper-radio-button {
+        font-size: 14px;
+        @apply(--layout-flex);
         text-align: center;
+        padding: 15px 10px;
       }
 
-       :host iron-icon {
-        color: #aaa;
+      :host iron-icon {
+        color: var(--app-icon-color, #99a1b3);
         padding-right: 7px;
         height: 16px;
         width: 16px;
+        margin-top: 3px;
       }
 
-       :host .checklist-item.completed iron-icon {
+      .checklist-item {
+        @apply(--layout-horizontal);
+        @apply(--layout-start);
+      }
+
+      .checklist-item pre {
+        @apply(--layout-flex);
+      }
+
+      :host .checklist-item.completed iron-icon {
         color: #5bca52;
+      }
+
+      .title{
+        padding: var(--standard-spacing, 20px) 0 var(--standard-spacing, 20px) var(--standard-spacing, 20px);
+      }
+
+      iron-pages{
+        padding-top: 0px;
+      }
+
+      .details{
+        padding: var(--standard-spacing, 20px) var(--standard-spacing, 20px) 0px 0px;
+      }
+
+      .detailsTopBar{
+        padding-left : 20px;
+        display: flex;
+        justify-content: space-between;
+      }
+
+      .detailsActionButtons{
+        display: flex;
+      }
+
+      .detailsActionButtons mdb-radio-list{
+        margin-top: 0px;
+      }
+
+      .leftSeparator{
+        border-left : 2px solid;
+        padding-left: 20px;
+      }
+
+      .rightSeparator{
+        border-right : 2px solid;
+        padding-right: 20px;
+      }
+
+      .detailsDataStats{
+        padding-right: 20px;
+        padding-left: 20px;
+        padding-top: 3px;
+      }
+
+      .detailsDataStatsFigures{
+        color: var(--mdb-accent-color-highlight, #5DA9DD);
+        font-size: 16px;
+      }
+
+      .detailsDataStats .detailsDataStatsFigures:last-child{
+        margin-left: 15px;
+      }
+
+      .details paper-radio-button{
+        font-size: 12px;
+      }
+
+      paper-tabs{
+        margin-top: 0px;
       }
     </style>
     <atom-google-sheet-adapter key="{{key}}"></atom-google-sheet-adapter>
+    
     <div class="legal-compliance-container">
-      <div class="column chart">
-        <h2>Your GDPR Story</h2>
-        <mdb-heatmap data="[[data]]"></mdb-heatmap>
-        <div class="gdpr-metrics">
-          <div>
-            <h2>[[_countChecklistItemsDone(data)]]/[[_countChecklistItemsTotal(data)]]</h2>
-            <p>Checklist items done</p>
+      <iron-pages selected="{{selectedTab}}">
+        <div class='summary'>
+          <div class="column chart">
+            <h2>Your GDPR Story</h2>
+            <mdb-heatmap data="[[data]]"></mdb-heatmap>
+            <div class="gdpr-metrics">
+              <div>
+                <h2>[[_countChecklistItemsDone(data)]]/[[_countChecklistItemsTotal(data)]]</h2>
+                <p>Checklist items done</p>
+              </div>
+              <div>
+                <h2>[[_countCompiledArticles(data)]]/[[data.length]]</h2>
+                <p>Articles complied to</p>
+              </div>
+            </div>
+            <mdb-radio-list selected="{{selectedDuration}}" size="small">
+              <paper-radio-button name="feb">FEB</paper-radio-button>
+              <paper-radio-button name="mar">MAR</paper-radio-button>
+              <paper-radio-button name="apr">APR</paper-radio-button>
+              <paper-radio-button name="may">MAY</paper-radio-button>
+              <paper-radio-button name="jun">JUN</paper-radio-button>
+              <paper-radio-button name="jul">JUL</paper-radio-button>
+            </mdb-radio-list>
           </div>
-          <div>
-            <h2>[[_countCompiledArticles(data)]]/[[data.length]]</h2>
-            <p>Articles complied to</p>
+          <div class="column faq-column">
+            <paper-tabs selected="{{selectedSummaryTab}}">
+              <paper-tab>TO BE COMPLIANT</paper-tab>
+              <paper-tab>FAQS</paper-tab>
+              <paper-tab>GLOSSARY</paper-tab>
+            </paper-tabs>
+            <iron-pages selected="{{selectedSummaryTab}}">
+              <div class="toBeCompliant">
+                <template id="complianceRepeater" is="dom-repeat" items="[[selectedArticle.toBeCompliant]]">
+                  <template is="dom-if" if="[[item.content]]">
+                    <div class$="checklist-item [[_checkCompleted(item.status)]]">
+                      <iron-icon icon="icons:check-circle"></iron-icon>
+                      <pre>[[item.content]]</pre>
+                    </div>
+                  </template>
+                </template>
+              </div>
+              <div class="faq">
+                <template id="faqRepeater" is="dom-repeat" items="[[selectedArticle.faqs]]" restamp>
+                  <mdb-heatmap-faq question="[[item.title]]" answer="[[item.description]]"></mdb-heatmap-faq>
+                </template>
+              </div>
+              <div class="glossary">
+                <template is="dom-repeat" items="[[glossary]]">
+                  <h3 id="[[_getId(item.term)]]">[[item.term]]</h3>
+                  <div>[[item.definition]]</div>
+                </template>
+              </div>
+            </iron-pages>
+          </div>
+          <div class="column article-column">
+            <template is="dom-if" if="[[selectedArticle]]">
+              <div class="article">
+                <h3 class="article-description">[[selectedArticle.description]]</h3>
+                <h3 class="title">
+                  [[selectedArticle.name]]<br />
+                  [[selectedArticle.periodicTableInfo.fullname]]
+                </h3>
+                <pre>[[selectedArticle.articleContent]]</pre>
+              </div>
+            </template>
           </div>
         </div>
-        <mdb-radio-list selected="{{selectedDuration}}">
-          <paper-radio-button name="feb">FEB</paper-radio-button>
-          <paper-radio-button name="mar">MAR</paper-radio-button>
-          <paper-radio-button name="apr">APR</paper-radio-button>
-          <paper-radio-button name="may">MAY</paper-radio-button>
-          <paper-radio-button name="jun">JUN</paper-radio-button>
-          <paper-radio-button name="jul">JUL</paper-radio-button>
-        </mdb-radio-list>
-      </div>
-      <div class="column faq-column">
-        <paper-tabs selected="{{selectedTab}}">
-          <paper-tab>TO BE COMPLIANT</paper-tab>
-          <paper-tab>FAQS</paper-tab>
-          <paper-tab>GLOSSARY</paper-tab>
-        </paper-tabs>
-        <iron-pages selected="{{selectedTab}}">
-          <div class="toBeCompliant">
-            <template id="complianceRepeater" is="dom-repeat" items="[[selectedArticle.toBeCompliant]]">
-              <template is="dom-if" if="[[item.content]]">
-                <div class$="checklist-item [[_checkCompleted(item.status)]]">
-                  <pre><iron-icon icon="icons:check-circle"></iron-icon>[[item.content]]</pre>
-                </div>
-              </template>
-            </template>
+        <div class='details'>
+          <div class='detailsTopBar'>
+            <h2>Your GDPR Story</h2>
+            <div class='detailsActionButtons'>
+              <div>
+                <mdb-radio-list class='rightSeparator' selected="{{selectedDetailOption}}" size="small">
+                  <paper-radio-button name="track">TRACK</paper-radio-button>
+                  <paper-radio-button name="understand">UNDERSTAND</paper-radio-button>
+                </mdb-radio-list>
+              </div>
+              <div class='detailsDataStats'>
+                <span class='detailsDataStatsFigures'>[[_countChecklistItemsDone(data)]]/[[_countChecklistItemsTotal(data)]]</span> Checklist items done
+                <span class='detailsDataStatsFigures'>[[_countCompiledArticles(data)]]/[[data.length]]</span> Articles complied to
+              </div>
+              <div>
+                <mdb-radio-list class='leftSeparator' selected="{{selectedDuration}}" size="small">
+                  <paper-radio-button name="feb">FEB</paper-radio-button>
+                  <paper-radio-button name="mar">MAR</paper-radio-button>
+                  <paper-radio-button name="apr">APR</paper-radio-button>
+                  <paper-radio-button name="may">MAY</paper-radio-button>
+                  <paper-radio-button name="jun">JUN</paper-radio-button>
+                  <paper-radio-button name="jul">JUL</paper-radio-button>
+                </mdb-radio-list>
+              </div>
+            </div>
           </div>
-          <div class="faq">
-            <template id="faqRepeater" is="dom-repeat" items="[[selectedArticle.faqs]]" restamp>
-              <mdb-heatmap-faq question="[[item.title]]" answer="[[item.description]]"></mdb-heatmap-faq>
-            </template>
-          </div>
-          <div class="glossary">
-            <template is="dom-repeat" items="[[glossary]]">
-              <h3 id="[[_getId(item.term)]]">[[item.term]]</h3>
-              <div>[[item.definition]]</div>
-            </template>
-          </div>
-        </iron-pages>
-      </div>
-      <div class="column article-column">
-        <template is="dom-if" if="[[selectedArticle]]">
-          <div class="article">
-            <h3 class="article-description">[[selectedArticle.description]]</h3>
-            <h3 class="title">[[selectedArticle.name]]</h3>
-            <pre>[[selectedArticle.articleContent]]</pre>
-          </div>
-        </template>
-      </div>
+          <mdb-detailed-heatmap articles="[[data]]" detail-type='{{selectedDetailOption}}' category-colors='[[categoryColors]]'></mdb-detailed-heatmap>
+        </div>
+      </iron-pages>
     </div>
   </template>
 
@@ -254,6 +351,21 @@
         glossarySheet: {
           type: String,
           value: 'Glossary'
+        },
+
+        periodicTableSheet: {
+          type: String,
+          value: 'Periodic Table'
+        },
+
+        articleCategoryColorSheet: {
+          type: String,
+          value: 'Colors'
+        },
+
+        categoryColors: {
+          type: Array,
+          value: []
         },
 
         data: {
@@ -293,6 +405,21 @@
         selectedTab: {
           type: Number,
           value: 0
+        },
+
+        selectedSummaryTab: {
+          type: Number,
+          value: 0
+        },
+
+        selectedTab:{
+          type: Number,
+          value: 0
+        },
+
+        selectedDetailOption: {
+          type: String,
+          value: 'track'
         }
       },
 
@@ -347,11 +474,14 @@
               setTimeout(function () {
                 var model = data[0],
                   glossary = data[1];
-                that.set('_data', that._transform(model));
+                var articles = that._transform(model);
+                that.categoryColors = data[3];
+                that._attachAdditionalInfoToArticles(articles, data[2], data[3]);
+                that.set('_data', articles);
                 that.set('glossary', glossary);
               }, 0);
             })
-            .then(function(){
+            .then(function () {
               that.fire('dataload-end');
             });
         }
@@ -362,6 +492,7 @@
       },
 
       _getDurationData: function (duration) {
+        var that = this;
         var map = {
           feb: 1,
           mar: 2,
@@ -377,6 +508,8 @@
                 c.status = c['status' + map[duration]];
                 return c;
               });
+            e.status = that._calculateStatus(e);
+            e.color = that._calculateColor(e.status);
             return e;
           });
       },
@@ -392,19 +525,10 @@
         var that = this,
           adapter = this.querySelector('atom-google-sheet-adapter');
 
-        return new Promise(function (resolve, reject) {
-          adapter.read(that.modelSheet)
-            .then(function (model) {
-              adapter.read(that.glossarySheet)
-                .then(function (glossary) {
-                  resolve([model, glossary]);
-                }).catch(function (error) {
-                  reject(error);
-                });
-            }).catch(function (error) {
-              reject(error);
-            });
-        });
+        var dataPromises = [adapter.read(that.modelSheet), adapter.read(that.glossarySheet), 
+          adapter.read(that.periodicTableSheet), adapter.read(that.articleCategoryColorSheet)];
+        
+        return Promise.all(dataPromises);
       },
 
       _dataChanged: function () {
@@ -417,13 +541,42 @@
         }
       },
 
+      _attachAdditionalInfoToArticles: function(articles, periodicTable, colors){
+        if((articles || []).length == 0 || (periodicTable || []).length == 0)
+          return;
+
+        articles.forEach(function(article){
+          var periodicTableMatch = periodicTable.find(function(x){
+            return x.article == article.id;
+          });
+
+          article.periodicTableInfo = periodicTableMatch || {};
+
+          article.periodicTableInfo.categoryColors = {};
+
+          var categoryColors = colors.filter(function(color){
+            return color.category.trim().toLowerCase() == article.periodicTableInfo.category.trim().toLowerCase();
+          }); 
+
+          categoryColors.forEach(function(categoryColor){
+            if(categoryColor.area.trim().toLowerCase() == 'background')
+              article.periodicTableInfo.categoryColors.background = categoryColor.value;
+
+            if(categoryColor.area.trim().toLowerCase() == 'text')
+              article.periodicTableInfo.categoryColors.text = categoryColor.value;
+          });
+        });
+      },
+
       _transform: function (model) {
         var articles = [];
+        var that = this;
 
         model.forEach(function (row, index) {
           var content = (row.articlecontent || '').match(/^(.*)$/mg);
           var name = 'Article ' + row.article;
           var article = articles.find(function (e) { return e.name === name; }) || articles.push({
+            id: row.article,
             name: name,
             description: row.oversimplifieddescriptionarticlesandrecitals,
             articleContent: row.articlecontent.trim(),
@@ -463,7 +616,7 @@
             }).length;
           var total = article.toBeCompliant.length;
 
-          if (total !== 0 && completed === total) count++;
+        if (total !== 0 && completed === total) count++;
 
         });
 
