@@ -61,6 +61,7 @@
 
       .summary .chart {
         padding: var(--standard-spacing, 20px) 0 var(--standard-spacing, 20px) var(--standard-spacing, 20px);
+        max-width: 335px;
       }
 
       :host .article-column {
@@ -180,7 +181,7 @@
       }
 
       .details{
-        padding: var(--standard-spacing, 20px) var(--standard-spacing, 20px) 0px 0px;
+        padding: 10px var(--standard-spacing, 20px) 0px 0px;
       }
 
       .detailsTopBar{
@@ -198,12 +199,12 @@
       }
 
       .leftSeparator{
-        border-left : 2px solid;
+        border-left : 1px solid var(--mdb-border-color);
         padding-left: 20px;
       }
 
       .rightSeparator{
-        border-right : 2px solid;
+        border-right : 1px solid var(--mdb-border-color);
         padding-right: 20px;
       }
 
@@ -222,8 +223,9 @@
         margin-left: 15px;
       }
 
-      .details paper-radio-button{
+      .details mdb-radio-list paper-radio-button{
         font-size: 12px;
+        padding: 8px;
       }
 
       paper-tabs{
