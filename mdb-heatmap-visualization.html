@@ -60,7 +60,7 @@
       }
 
       .summary .chart {
-        padding: var(--standard-spacing, 20px) 0 var(--standard-spacing, 20px) var(--standard-spacing, 20px);
+        padding: 10px 0 var(--standard-spacing, 20px) var(--standard-spacing, 20px);
         max-width: 335px;
       }
 
@@ -78,6 +78,7 @@
 
       :host .article h3.title {
         font-size: 18px;
+        padding-left: 0px;
       }
 
       :host .article h3.article-description {
@@ -106,6 +107,10 @@
       :host .faq h3:nth-child(1),
       :host .glossary h3:nth-child(1) {
         margin-top: 0;
+      }
+
+      :host .toBeCompliant, :host .glossary{
+        padding-top: 20px;
       }
 
       :host pre {
@@ -238,7 +243,7 @@
       <iron-pages selected="{{selectedTab}}">
         <div class='summary'>
           <div class="column chart">
-            <h2>Your GDPR Story</h2>
+            <h2>Our GDPR Story</h2>
             <mdb-heatmap data="[[data]]"></mdb-heatmap>
             <div class="gdpr-metrics">
               <div>
@@ -304,7 +309,7 @@
         </div>
         <div class='details'>
           <div class='detailsTopBar'>
-            <h2>Your GDPR Story</h2>
+            <h2>Our GDPR Story</h2>
             <div class='detailsActionButtons'>
               <div>
                 <mdb-radio-list class='rightSeparator' selected="{{selectedDetailOption}}" size="small">
