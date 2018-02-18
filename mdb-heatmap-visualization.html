@@ -28,7 +28,6 @@
         color: var( --mdb-secondary-text-dark, #000);
         background-color: var(--app-white-color, #fff);
         font-size: var(--mdb-medium-font, 14px);
-        width: 1240px;
         --mdb-radio-list-container: {
           @apply(--layout-horizontal);
         }
@@ -43,7 +42,12 @@
       }
 
       :host paper-tabs {
+        margin-top: 0px;
         border-bottom: 1px solid var(--mdb-border-color, #444444);
+      }
+
+      :host paper-tab {
+        padding: 0 var(--standar-spacing, 20px);
       }
 
       :host .summary {
@@ -76,14 +80,25 @@
         color: var(--mdb-primary-text-dark, #000);
       }
 
-      :host .article h3.title {
-        font-size: 18px;
-        padding-left: 0px;
+      .article h3,
+      .article h2 {
+        font-size: 16px;
+        line-height: 1.2;
+        margin-top: 0;
+        margin-bottom: 10px;
       }
 
-      :host .article h3.article-description {
+      .article h3 {
+        font-weight: 500;
+      }
+
+      .article .article-title-help {
+        font-size: 20px;
         font-weight: 400;
-        margin-top: 0;
+      }
+
+      .article h2 {
+        font-weight: bold;
       }
 
       :host .article ol {
@@ -98,19 +113,9 @@
         padding: var(--standar-padding, 20px) 0 0;
       }
 
-      :host .faq h3,
-      :host .glossary h3 {
-        margin-top: 5px;
-        margin-bottom: 5px;
-      }
 
-      :host .faq h3:nth-child(1),
-      :host .glossary h3:nth-child(1) {
-        margin-top: 0;
-      }
-
-      :host .toBeCompliant, :host .glossary{
-        padding-top: 20px;
+      :host .toBeCompliant {
+        padding-top: 12px;
       }
 
       :host pre {
@@ -158,10 +163,10 @@
 
       :host iron-icon {
         color: var(--app-icon-color, #99a1b3);
-        padding-right: 7px;
-        height: 16px;
-        width: 16px;
-        margin-top: 3px;
+        padding-right: 6px;
+        height: 18px;
+        width: 18px;
+        margin-top: 2px;
       }
 
       .checklist-item {
@@ -177,68 +182,76 @@
         color: #5bca52;
       }
 
-      .title{
-        padding: var(--standard-spacing, 20px) 0 var(--standard-spacing, 20px) var(--standard-spacing, 20px);
-      }
-
-      iron-pages{
+      iron-pages {
         padding-top: 0px;
       }
 
-      .details{
+      h3.glossary-header {
+        color: var(--mdb-primary-text-dark);
+        margin-top: 12px;
+        font-weight: 500;
+        margin-bottom: 2px;
+      }
+
+      .glossary-header::first-letter {
+        text-transform: uppercase;
+      }
+
+      .glossary-header,
+      .glossary-answer {
+        font-size: 14px;
+      }
+
+      .details {
         padding: 10px var(--standard-spacing, 20px) 0px 0px;
       }
 
-      .detailsTopBar{
-        padding-left : 20px;
+      .detailsTopBar {
+        padding-left: 20px;
         display: flex;
         justify-content: space-between;
       }
 
-      .detailsActionButtons{
+      .detailsActionButtons {
         display: flex;
       }
 
-      .detailsActionButtons mdb-radio-list{
+      .detailsActionButtons mdb-radio-list {
         margin-top: 0px;
       }
 
-      .leftSeparator{
-        border-left : 1px solid var(--mdb-border-color);
+      .leftSeparator {
+        border-left: 1px solid var(--mdb-border-color);
         padding-left: 20px;
       }
 
-      .rightSeparator{
-        border-right : 1px solid var(--mdb-border-color);
+      .rightSeparator {
+        border-right: 1px solid var(--mdb-border-color);
         padding-right: 20px;
       }
 
-      .detailsDataStats{
+      .detailsDataStats {
         padding-right: 20px;
         padding-left: 20px;
         padding-top: 3px;
       }
 
-      .detailsDataStatsFigures{
+      .detailsDataStatsFigures {
         color: var(--mdb-accent-color-highlight, #5DA9DD);
         font-size: 16px;
       }
 
-      .detailsDataStats .detailsDataStatsFigures:last-child{
+      .detailsDataStats .detailsDataStatsFigures:last-child {
         margin-left: 15px;
       }
 
-      .details mdb-radio-list paper-radio-button{
+      .details mdb-radio-list paper-radio-button {
         font-size: 12px;
         padding: 8px;
       }
-
-      paper-tabs{
-        margin-top: 0px;
-      }
     </style>
     <atom-google-sheet-adapter key="{{key}}"></atom-google-sheet-adapter>
-    
+
     <div class="legal-compliance-container">
       <iron-pages selected="{{selectedTab}}">
         <div class='summary'>
@@ -265,7 +278,7 @@
             </mdb-radio-list>
           </div>
           <div class="column faq-column">
-            <paper-tabs selected="{{selectedSummaryTab}}">
+            <paper-tabs class="faq-colum-tab" selected="{{selectedSummaryTab}}">
               <paper-tab>TO BE COMPLIANT</paper-tab>
               <paper-tab>FAQS</paper-tab>
               <paper-tab>GLOSSARY</paper-tab>
@@ -288,8 +301,8 @@
               </div>
               <div class="glossary">
                 <template is="dom-repeat" items="[[glossary]]">
-                  <h3 id="[[_getId(item.term)]]">[[item.term]]</h3>
-                  <div>[[item.definition]]</div>
+                  <h3 class="glossary-header" id="[[_getId(item.term)]]">[[item.term]]</h3>
+                  <div class="glossary-answer">[[item.definition]]</div>
                 </template>
               </div>
             </iron-pages>
@@ -298,8 +311,8 @@
             <template is="dom-if" if="[[selectedArticle]]">
               <div class="article">
                 <h3 class="article-description">[[selectedArticle.description]]</h3>
-                <h3 class="title">
-                  [[selectedArticle.name]]<br />
+                <h2 class="article-title"> [[selectedArticle.name]]</h2>
+                <h3 class="article-title-help">
                   [[selectedArticle.periodicTableInfo.fullname]]
                 </h3>
                 <pre>[[selectedArticle.articleContent]]</pre>
@@ -419,7 +432,7 @@
           value: 0
         },
 
-        selectedTab:{
+        selectedTab: {
           type: Number,
           value: 0
         },
@@ -532,9 +545,9 @@
         var that = this,
           adapter = this.querySelector('atom-google-sheet-adapter');
 
-        var dataPromises = [adapter.read(that.modelSheet), adapter.read(that.glossarySheet), 
-          adapter.read(that.periodicTableSheet), adapter.read(that.articleCategoryColorSheet)];
-        
+        var dataPromises = [adapter.read(that.modelSheet), adapter.read(that.glossarySheet),
+        adapter.read(that.periodicTableSheet), adapter.read(that.articleCategoryColorSheet)];
+
         return Promise.all(dataPromises);
       },
 
@@ -548,12 +561,12 @@
         }
       },
 
-      _attachAdditionalInfoToArticles: function(articles, periodicTable, colors){
-        if((articles || []).length == 0 || (periodicTable || []).length == 0)
+      _attachAdditionalInfoToArticles: function (articles, periodicTable, colors) {
+        if ((articles || []).length == 0 || (periodicTable || []).length == 0)
           return;
 
-        articles.forEach(function(article){
-          var periodicTableMatch = periodicTable.find(function(x){
+        articles.forEach(function (article) {
+          var periodicTableMatch = periodicTable.find(function (x) {
             return x.article == article.id;
           });
 
@@ -561,15 +574,15 @@
 
           article.periodicTableInfo.categoryColors = {};
 
-          var categoryColors = colors.filter(function(color){
+          var categoryColors = colors.filter(function (color) {
             return color.category.trim().toLowerCase() == article.periodicTableInfo.category.trim().toLowerCase();
-          }); 
+          });
 
-          categoryColors.forEach(function(categoryColor){
-            if(categoryColor.area.trim().toLowerCase() == 'background')
+          categoryColors.forEach(function (categoryColor) {
+            if (categoryColor.area.trim().toLowerCase() == 'background')
               article.periodicTableInfo.categoryColors.background = categoryColor.value;
 
-            if(categoryColor.area.trim().toLowerCase() == 'text')
+            if (categoryColor.area.trim().toLowerCase() == 'text')
               article.periodicTableInfo.categoryColors.text = categoryColor.value;
           });
         });
@@ -623,7 +636,7 @@
             }).length;
           var total = article.toBeCompliant.length;
 
-        if (total !== 0 && completed === total) count++;
+          if (total !== 0 && completed === total) count++;
 
         });
 
