@@ -73,7 +73,19 @@
       }
 
       :host .column.faq-column {
-        padding-top: 0;
+        padding: 0;
+        overflow: hidden;
+        @apply(--layout-vertical);
+      }
+
+      .faq-column paper-tabs {
+        margin: 0 var(--standard-spacing, 20px);
+      }
+
+      .faq-column iron-pages {
+        padding: 0 var(--standard-spacing, 20px);
+        flex: 1;
+        overflow: auto;
       }
 
       :host .article {
