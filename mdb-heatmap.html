@@ -86,8 +86,8 @@
                 var that = this;
                 var data = this.data
                     .map(function (e, i) {
-                        e.row = parseInt(i / 10);
-                        e.col = i % 10;
+                        e.col = parseInt(i / 10);
+                        e.row = i % 10;
                         return e;
                     });
                 this._render(data);
@@ -132,7 +132,7 @@
                         });
 
                     cards.enter().append('text')
-                        .text(function (d) { return d.col + 1 == 10 ? (d.row + 1) + '0' : d.row + '' + (d.col + 1) })
+                        .text(function (d) { return d.row + 1 == 10 ? (d.col + 1) + '0' : d.col + '' + (d.row + 1) })
                         .attr("y", function (d) { return (d.col * (gridSize + 3)) + 20; })
                         .attr("x", function (d) { return (d.row * (gridSize + 3)) + 10; })
                         .attr("width", gridSize)
