@@ -559,6 +559,11 @@
             var currentYear = (new Date()).getFullYear();
             return [currentYear];
           }
+        },
+
+        _updationQueue: {
+          type: Array,
+          value: []
         }
       },
 
@@ -610,26 +615,51 @@
         return tab == 0;
       },
 
-      _toggleComplianceCheck: function(e){
-        //TODO: get lastest compliance hashes before update
+      _queueUpdationRequest: function(articleId, month, hash, hasComplianceMet){
+        var request = this._updationQueue.find(function(_x){
+          return _x.articleId == articleId && _x.month == month;
+        });
+        if(!request){
+          request = {articleId: articleId, month: month, hashes: (this.selectedArticle.checkedComplianceHashes || {})[month] || []};
+          this._updationQueue.push(request);
+        }
+
+        var existingIndex = request.hashes.indexOf(hash);
+        if(hasComplianceMet){
+          if(existingIndex >= 0)
+            request.hashes.splice(existingIndex, 1);
+        }
+        else{
+          if(existingIndex == -1)
+            request.hashes.push(hash);
+        }
+      },
+
+      _processNextQueueItemAsync: function(){
+        if(this._updationQueue.length == 0)
+          return;
+
         var that = this;
-        var item = e.model.item;
-        var articleId = this.selectedArticle.id, month = this.selectedDuration;
-        var complianceHashes = (this.selectedArticle.checkedComplianceHashes || {})[month] || [];
-        var existingIndex = complianceHashes.indexOf(item.contentHash);
-        if(existingIndex >= 0)
-          complianceHashes.splice(existingIndex, 1);
-        else
-          complianceHashes.push(item.contentHash);
+        var item = this._updationQueue.shift();
 
         this.set('_pendingStatusSyncCount', this._pendingStatusSyncCount + 1);
-        this.dataProvider.updateCheckedArticleComplianceHashesAsync([{articleId: articleId, month: month, complianceHashes: complianceHashes}])
+        this.dataProvider.updateCheckedArticleComplianceHashesAsync([{articleId: item.articleId, month: item.month, complianceHashes: item.hashes}])
           .then(function(){
             return that._syncCheckedStatus();
           })
           .then(function(){
             that.set('_pendingStatusSyncCount', that._pendingStatusSyncCount - 1);
+            that._processNextQueueItemAsync();
           });
+      },
+
+      _toggleComplianceCheck: function(e){
+        var that = this;
+        var item = e.model.item;
+        
+        this._queueUpdationRequest(this.selectedArticle.id, this.selectedDuration, item.contentHash, item.complianceMet);
+
+        this._processNextQueueItemAsync();
       },
 
       _gotoGlossary: function () {
