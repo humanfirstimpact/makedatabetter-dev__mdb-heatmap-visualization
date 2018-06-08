@@ -7,6 +7,7 @@
 <link rel="import" href="../iron-pages/iron-pages.html">
 <link rel="import" href="../iron-icons/iron-icons.html">
 <link rel="import" href="../iron-icon/iron-icon.html">
+<link rel="import" href="../paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../paper-styles/typography.html">
 <link rel="import" href="mdb-heatmap-behavior.html">
 <link rel="import" href="mdb-heatmap.html">
@@ -173,12 +174,13 @@
         padding: 15px 10px;
       }
 
-      :host iron-icon {
+      :host paper-icon-button {
         color: var(--app-icon-color, #99a1b3);
         padding-right: 6px;
-        height: 18px;
-        width: 18px;
-        margin-top: 2px;
+        height: 35px;
+        width: 35px;
+        padding-top: 0px;
+        margin-top: -1px;
       }
 
       .checklist-item {
@@ -190,7 +192,7 @@
         @apply(--layout-flex);
       }
 
-      :host .checklist-item.completed iron-icon {
+      :host .checklist-item.completed paper-icon-button {
         color: #5bca52;
       }
 
@@ -261,6 +263,40 @@
         font-size: 12px;
         padding: 8px;
       }
+
+      .syncStatus{
+        text-align: center;
+        color: #009688;
+        padding-top: 10px;
+      }
+
+      .dateControlContainer{
+        display: flex;
+        justify-content: space-around;
+        margin-top: 25px;
+      }
+
+      .dateControlContainer select{
+        height: 40px;
+        font-size: 18px;
+        color: gray;
+        text-indent: 10px;
+        border: 1px solid var(--mdb-border-color, #444444);
+        opacity: 0.8;
+      }
+
+      .dateControlContainer select.year{
+        width: 100px;
+      }
+
+      .dateControlContainer select.month{
+        width: 140px;
+      }
+
+      .dateControlContainer paper-icon-button{
+        width: 50px;
+        height: 50px;
+      }
     </style>
     <atom-google-sheet-adapter key="{{key}}"></atom-google-sheet-adapter>
 
@@ -280,14 +316,28 @@
                 <p>Articles complied to</p>
               </div>
             </div>
-            <mdb-radio-list selected="{{selectedDuration}}" size="small">
+            <div class='dateControlContainer'>
+              <paper-icon-button icon="icons:chevron-left" on-tap="_prevMonth"></paper-icon-button>
+              <select class='year'>
+                  <template is='dom-repeat' items='[[_yearSelectionOptions]]'>
+                    <option value='[[item]]'>[[item]]</option>
+                  </template>
+              </select>
+              <select class='month' value="{{selectedDuration::change}}">
+                <template is='dom-repeat' items='[[_monthSelectionOptions]]'>
+                  <option value='[[item.key]]'>[[item.value]]</option>
+                </template>
+              </select>
+              <paper-icon-button icon="icons:chevron-right" on-tap="_nextMonth"></paper-icon-button>
+            </div>
+            <!-- <mdb-radio-list selected="{{selectedDuration}}" size="small">
               <paper-radio-button name="feb">FEB</paper-radio-button>
               <paper-radio-button name="mar">MAR</paper-radio-button>
               <paper-radio-button name="apr">APR</paper-radio-button>
               <paper-radio-button name="may">MAY</paper-radio-button>
               <paper-radio-button name="jun">JUN</paper-radio-button>
               <paper-radio-button name="jul">JUL</paper-radio-button>
-            </mdb-radio-list>
+            </mdb-radio-list> -->
           </div>
           <div class="column faq-column">
             <paper-tabs class="faq-colum-tab" selected="{{selectedSummaryTab}}">
@@ -295,12 +345,19 @@
               <paper-tab>FAQS</paper-tab>
               <paper-tab>GLOSSARY</paper-tab>
             </paper-tabs>
+            <template is='dom-if' if="[[_isTabToBeCompliant(selectedSummaryTab)]]">
+                <template is='dom-if' if="[[selectedArticle.toBeCompliant.length]]">
+                  <div class='syncStatus'>
+                    Status: [[_getSyncStatus(_pendingStatusSyncCount)]]
+                  </div>
+                </template>
+            </template>
             <iron-pages selected="{{selectedSummaryTab}}">
               <div class="toBeCompliant">
                 <template id="complianceRepeater" is="dom-repeat" items="[[selectedArticle.toBeCompliant]]">
                   <template is="dom-if" if="[[item.content]]">
-                    <div class$="checklist-item [[_checkCompleted(item.status)]]">
-                      <iron-icon icon="icons:check-circle"></iron-icon>
+                    <div class$="checklist-item [[_checkCompleted(item.complianceMet)]]">
+                      <paper-icon-button icon="icons:check-circle" on-tap='_toggleComplianceCheck'></paper-icon-button>
                       <pre>[[item.content]]</pre>
                     </div>
                   </template>
@@ -447,6 +504,45 @@
         selectedDetailOption: {
           type: String,
           value: 'track'
+        },
+
+        dataProvider : {
+          type: Object
+        },
+
+        hashProvider: {
+          type: Object
+        },
+
+        _pendingStatusSyncCount: {
+          type: Number,
+          value: 0
+        },
+
+        _monthMapping: {
+          type: Object,
+          value: {
+            feb: 1,
+            mar: 2,
+            apr: 3,
+            may: 4,
+            jun: 5,
+            jul: 6
+          }
+        },
+
+        _monthSelectionOptions: {
+          type: Array,
+          value: [{key: 'feb', value: 'February'}, {key: 'mar', value: 'March'}, {key: 'apr', value: 'April'},
+                  {key: 'may', value: 'May'}, {key: 'jun', value: 'June'}, {key: 'jul', value: 'July'}]
+        },
+
+        _yearSelectionOptions : {
+          type: Array,
+          value: function(){
+            var currentYear = (new Date()).getFullYear();
+            return [currentYear];
+          }
         }
       },
 
@@ -463,6 +559,57 @@
           this._gotoGlossary();
           this.querySelector('#' + e.detail).scrollIntoView();
         });
+      },
+
+      _changeDuration: function(moveAhead = true){
+        var allMonthKeys = Object.keys(this._monthMapping);
+        var currentIndex = allMonthKeys.indexOf(this.selectedDuration);
+        var requiredIndex = moveAhead ? currentIndex + 1: currentIndex - 1;
+
+        if(requiredIndex == allMonthKeys.length)
+          requiredIndex = 0;
+        else if(requiredIndex == -1)
+          requiredIndex = allMonthKeys.length - 1;
+
+        this.set('selectedDuration', allMonthKeys[requiredIndex]);
+      },
+
+      _getSyncStatus: function(pendingCount){
+        return pendingCount > 0 ? 'Syncing...' : 'Synced';
+      },
+
+      _nextMonth: function(){
+        this._changeDuration(true);
+      },
+
+      _prevMonth: function(){
+        this._changeDuration(false); 
+      },
+
+      _isTabToBeCompliant: function(tab){
+        return tab == 0;
+      },
+
+      _toggleComplianceCheck: function(e){
+        //TODO: get lastest compliance hashes before update
+        var that = this;
+        var item = e.model.item;
+        var articleId = this.selectedArticle.id, month = this.selectedDuration;
+        var complianceHashes = (this.selectedArticle.checkedComplianceHashes || {})[month] || [];
+        var existingIndex = complianceHashes.indexOf(item.contentHash);
+        if(existingIndex >= 0)
+          complianceHashes.splice(existingIndex, 1);
+        else
+          complianceHashes.push(item.contentHash);
+
+        this.set('_pendingStatusSyncCount', this._pendingStatusSyncCount + 1);
+        this.dataProvider.updateCheckedArticleComplianceHashesAsync([{articleId: articleId, month: month, complianceHashes: complianceHashes}])
+          .then(function(){
+            return that._syncCheckedStatus();
+          })
+          .then(function(){
+            that.set('_pendingStatusSyncCount', this._pendingStatusSyncCount - 1);
+          });
       },
 
       _gotoGlossary: function () {
@@ -487,8 +634,8 @@
         }
       },
 
-      _checkCompleted: function (status) {
-        return ['na', 'n.a.'].indexOf(status.toLowerCase()) !== -1 || parseInt(status) == 100 ? 'completed' : '';
+      _checkCompleted: function (complianceMet) {
+        return complianceMet ? 'completed' : '';
       },
 
       _keyChanged: function () {
@@ -498,14 +645,18 @@
           this._fetchData()
             .then(function (data) {
               that.dataLoaded = true;
+              var model = data[0], glossary = data[1];
+              var articles = that._transform(model);        
               setTimeout(function () {
-                var model = data[0],
-                  glossary = data[1];
-                var articles = that._transform(model);
                 that.categoryColors = data[3];
                 that._attachAdditionalInfoToArticles(articles, data[2], data[3]);
                 that.set('_data', articles);
                 that.set('glossary', glossary);
+                that.set('_pendingStatusSyncCount', that._pendingStatusSyncCount + 1);
+                that._syncCheckedStatus()
+                  .then(function(){
+                    that.set('_pendingStatusSyncCount', that._pendingStatusSyncCount - 1);
+                  });
               }, 0);
             })
             .then(function () {
@@ -514,25 +665,64 @@
         }
       },
 
+      _syncCheckedStatus: function(){
+        var that = this;
+        var allArticleIds = this._data.map(function(_article){
+          return _article.id;
+        });
+        var allMonths = Object.keys(this._monthMapping);
+
+        return this.dataProvider.getCheckedArticleComplianceHashesAsync(allArticleIds, allMonths)
+          .then(function(articleComplianceHashes){
+            that._mergeComplianceHashesWithArticles(that._data, articleComplianceHashes);
+            that._updateComplianceStatusForDuration();
+          })
+          .catch(function(){});
+      },
+
+      _updateComplianceStatusForDuration: function(){
+        var that = this;
+        
+        if(!this.selectedArticle || !this.selectedArticle.toBeCompliant)
+          return;
+        that.selectedArticle.toBeCompliant.forEach(function(compliance){
+            var complianceMet = ((that.selectedArticle.checkedComplianceHashes || {})[that.selectedDuration] || []).find(function(_hash){
+              return _hash == compliance.contentHash;
+            });
+            if(complianceMet)
+              compliance.complianceMet = true;
+            else
+              compliance.complianceMet = false;
+        });
+
+        that.set('selectedArticle', JSON.parse(JSON.stringify(that.selectedArticle)));
+      },
+
+      _mergeComplianceHashesWithArticles: function(articles, articleComplianceHashes){
+        (articleComplianceHashes || []).forEach(function(articleComplianceHash){
+          var match = articles.find(function(_article){
+            return _article.id == articleComplianceHash.articleId;
+          });
+
+          if(!match)
+            return;
+
+          match.checkedComplianceHashes = articleComplianceHash.checkedComplianceHashes;
+        });
+      },
+
       _rawDataChanged: function () {
         this.set('data', this._getDurationData(this.selectedDuration));
       },
 
       _getDurationData: function (duration) {
         var that = this;
-        var map = {
-          feb: 1,
-          mar: 2,
-          apr: 3,
-          may: 4,
-          jun: 5,
-          jul: 6
-        };
+
         return this._data
           .map(function (e) {
             e.toBeCompliant
               .map(function (c) {
-                c.status = c['status' + map[duration]];
+                c.status = c['status' + that._monthMapping[duration]];
                 return c;
               });
             e.status = that._calculateStatus(e);
@@ -545,6 +735,7 @@
         if (this.selectedArticle.name) {
           this.set('data', this._getDurationData(this.selectedDuration));
           this.set('selectedArticle', JSON.parse(JSON.stringify(this.data[this.selected - 1])));
+          this._updateComplianceStatusForDuration();
         }
       },
 
@@ -621,6 +812,7 @@
           if (row.whatitmeansoutcomestobecompliantmodeltobecompliantmycompanycontrollermust) {
             article.toBeCompliant.push({
               content: row.whatitmeansoutcomestobecompliantmodeltobecompliantmycompanycontrollermust,
+              contentHash: that.hashProvider.getHash(row.whatitmeansoutcomestobecompliantmodeltobecompliantmycompanycontrollermust),
               status1: row.status,
               status2: row.status2,
               status3: row.status3,
