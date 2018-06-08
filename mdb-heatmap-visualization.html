@@ -9,6 +9,7 @@
 <link rel="import" href="../iron-icon/iron-icon.html">
 <link rel="import" href="../paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../paper-styles/typography.html">
+<link rel="import" href="../paper-spinner/paper-spinner.html">
 <link rel="import" href="mdb-heatmap-behavior.html">
 <link rel="import" href="mdb-heatmap.html">
 <link rel="import" href="mdb-detailed-heatmap.html">
@@ -32,6 +33,18 @@
         --mdb-radio-list-container: {
           @apply(--layout-horizontal);
         }
+        --paper-spinner-stroke-width: 2px;
+        
+        --paper-spinner-layer-1-color: #009688;
+        --paper-spinner-layer-2-color: #009688;
+        --paper-spinner-layer-3-color: #009688;
+        --paper-spinner-layer-4-color: #009688;
+      }
+
+      :host paper-spinner{
+        width: 18px;
+        height: 18px;
+        margin-left: 10px;
       }
 
       :host h2 {
@@ -349,6 +362,9 @@
                 <template is='dom-if' if="[[selectedArticle.toBeCompliant.length]]">
                   <div class='syncStatus'>
                     Status: [[_getSyncStatus(_pendingStatusSyncCount)]]
+                    <template is='dom-if' if='[[!_isSyncDone(_pendingStatusSyncCount)]]'>
+                      <paper-spinner active></paper-spinner>
+                    </template>
                   </div>
                 </template>
             </template>
@@ -578,6 +594,10 @@
         return pendingCount > 0 ? 'Syncing...' : 'Synced';
       },
 
+      _isSyncDone: function(pendingCount){
+        return pendingCount == 0;
+      },
+
       _nextMonth: function(){
         this._changeDuration(true);
       },
@@ -608,7 +628,7 @@
             return that._syncCheckedStatus();
           })
           .then(function(){
-            that.set('_pendingStatusSyncCount', this._pendingStatusSyncCount - 1);
+            that.set('_pendingStatusSyncCount', that._pendingStatusSyncCount - 1);
           });
       },
 
