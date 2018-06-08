@@ -196,6 +196,16 @@
         margin-top: -1px;
       }
 
+      .complianceUpdateSpinner{
+        color: var(--app-icon-color, #99a1b3);
+        padding-right: 6px;
+        padding-bottom: 8px;
+        padding-top: 8px;
+        margin-top: -1px;
+        height: 20px;
+        width: 20px;
+      }
+
       .checklist-item {
         @apply(--layout-horizontal);
         @apply(--layout-start);
@@ -281,6 +291,7 @@
         text-align: center;
         color: #009688;
         padding-top: 10px;
+        height: 25px;
       }
 
       .dateControlContainer{
@@ -373,7 +384,10 @@
                 <template id="complianceRepeater" is="dom-repeat" items="[[selectedArticle.toBeCompliant]]">
                   <template is="dom-if" if="[[item.content]]">
                     <div class$="checklist-item [[_checkCompleted(item.complianceMet)]]">
-                      <paper-icon-button icon="icons:check-circle" on-tap='_toggleComplianceCheck'></paper-icon-button>
+                      <template is='dom-if' if='[[item.updatePending]]'>
+                        <paper-spinner class='complianceUpdateSpinner' active></paper-spinner>
+                      </template>
+                      <paper-icon-button hidden$='[[item.updatePending]]' icon="icons:check-circle" on-tap='_toggleComplianceCheck'></paper-icon-button>
                       <pre>[[item.content]]</pre>
                     </div>
                   </template>
@@ -615,14 +629,22 @@
         return tab == 0;
       },
 
-      _queueUpdationRequest: function(articleId, month, hash, hasComplianceMet){
+      _queueUpdationRequest: function(articleId, month, complianceItem){
+        var hash = complianceItem.contentHash;
+        var hasComplianceMet = complianceItem.complianceMet;
+
+        complianceItem.updatePending = true;
+        this._notifyComplianceUpdationProgress(complianceItem);
         var request = this._updationQueue.find(function(_x){
           return _x.articleId == articleId && _x.month == month;
         });
         if(!request){
-          request = {articleId: articleId, month: month, hashes: (this.selectedArticle.checkedComplianceHashes || {})[month] || []};
+          request = {articleId: articleId, month: month, hashes: (this.selectedArticle.checkedComplianceHashes || {})[month] || [], complianceItems: []};
           this._updationQueue.push(request);
         }
+
+        var itemIndex = request.complianceItems.indexOf(complianceItem);
+        if(itemIndex == -1) request.complianceItems.push(complianceItem);
 
         var existingIndex = request.hashes.indexOf(hash);
         if(hasComplianceMet){
@@ -649,15 +671,28 @@
           })
           .then(function(){
             that.set('_pendingStatusSyncCount', that._pendingStatusSyncCount - 1);
+            item.complianceItems.forEach(function(_item){
+              _item.updatePending = false;
+              that._notifyComplianceUpdationProgress(_item);
+            });
             that._processNextQueueItemAsync();
           });
+      },
+
+      _notifyComplianceUpdationProgress: function(complianceItem){
+        for(var i=0; i<this.selectedArticle.toBeCompliant.length; i++){
+          if(this.selectedArticle.toBeCompliant[i].contentHash == complianceItem.contentHash){
+            this.set(['selectedArticle.toBeCompliant', i, 'updatePending'].join('.'), complianceItem.updatePending);
+            break;
+          }
+        }
       },
 
       _toggleComplianceCheck: function(e){
         var that = this;
         var item = e.model.item;
         
-        this._queueUpdationRequest(this.selectedArticle.id, this.selectedDuration, item.contentHash, item.complianceMet);
+        this._queueUpdationRequest(this.selectedArticle.id, this.selectedDuration, item);
 
         this._processNextQueueItemAsync();
       },
@@ -725,6 +760,7 @@
         return this.dataProvider.getCheckedArticleComplianceHashesAsync(allArticleIds, allMonths)
           .then(function(articleComplianceHashes){
             that._mergeComplianceHashesWithArticles(that._data, articleComplianceHashes);
+            
             that._updateComplianceStatusForDuration();
           })
           .catch(function(){});
