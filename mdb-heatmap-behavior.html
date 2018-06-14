@@ -21,8 +21,7 @@
         _calculateStatus: function (article) {
             var percentages = (article.toBeCompliant || [])
                 .map(function (e) {
-                    var s = parseInt(e.status);
-                    return ['na', 'n.a.'].indexOf(e.status.toLowerCase()) !== -1 || s === 100 ? 100 : s || 0
+                    return e.complianceMet ? 100 : 0;
                 });
             var completed = (function (arr) {
                 var sum = 0;
