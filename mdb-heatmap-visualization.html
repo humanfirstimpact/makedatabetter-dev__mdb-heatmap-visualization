@@ -516,7 +516,8 @@
         },
 
         _selectedYear: {
-          type: Number
+          type: Number,
+          observer: '_selectedYearChanged'
         },
 
         _selectedMonth: {
@@ -657,6 +658,17 @@
         });
       },
 
+      _selectedYearChanged: function(year){
+        var possibleMonths = this._getFilteredMonths(year);
+
+        if(possibleMonths.indexOf(this._selectedMonth) < 0){
+          setTimeout(function(){
+            this.set('_selectedMonth', possibleMonths[0]);
+            this.querySelector('select.month').value = possibleMonths[0];
+          }.bind(this));
+        }
+      },
+
       _getFilteredMonths: function(selectedYear){
         if(selectedYear == this._durationStartPoint.year())
           return this._monthSelectionOptions.slice(this._durationStartPoint.month());
@@ -671,7 +683,7 @@
         var currentDuration = moment(this._currentDuration);
         if(currentDuration.year() != this._selectedYear 
           || currentDuration.month() != this._allMonths.indexOf(this._selectedMonth))
-            currentDuration.set({year: this.selectedYear, month: this._allMonths.indexOf(this._selectedMonth)});
+            currentDuration.set({year: this._selectedYear, month: this._allMonths.indexOf(this._selectedMonth)});
         
         if(moveAhead == true && currentDuration.year() == this._durationEndPoint.year() 
           && currentDuration.month() == this._durationEndPoint.month()){
