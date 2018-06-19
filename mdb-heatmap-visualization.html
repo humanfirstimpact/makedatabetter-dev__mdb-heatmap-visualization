@@ -777,6 +777,7 @@
               _item.updatePending = false;
               that._notifyComplianceUpdationProgress(_item);
             });
+            that._setMetaData();
             that._processNextQueueItemAsync();
           });
       },
