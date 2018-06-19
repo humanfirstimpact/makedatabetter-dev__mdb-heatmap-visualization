@@ -930,11 +930,14 @@
 
       _selectedDurationChanged: function () {
         if (this.selectedArticle.name) {
-          this._updateComplianceStatusForSelectedMonth(this.selectedArticle);
-          this._setMetaData();
+          (this.data || []).forEach(function(article){
+            this._updateComplianceStatusForSelectedMonth(article);  
+          }.bind(this));
           
           this.set('data', this._getDurationData(this._selectedMonth));
           
+          this._setMetaData();
+
           this.set('selectedArticle.toBeCompliant', JSON.parse(JSON.stringify(this.selectedArticle.toBeCompliant)));
         }
       },
