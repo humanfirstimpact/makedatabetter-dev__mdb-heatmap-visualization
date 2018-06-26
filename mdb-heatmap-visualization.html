@@ -670,8 +670,11 @@
       },
 
       _getFilteredMonths: function(selectedYear){
-        if(selectedYear == this._durationStartPoint.year())
+        if(selectedYear == this._durationStartPoint.year()){
+          if(selectedYear == this._durationEndPoint.year())
+            return this._monthSelectionOptions.slice(this._durationStartPoint.month(), this._durationEndPoint.month() + 1);
           return this._monthSelectionOptions.slice(this._durationStartPoint.month());
+        }
 
         if(selectedYear == this._durationEndPoint.year())
           return this._monthSelectionOptions.slice(0, this._durationEndPoint.month() + 1);
@@ -766,10 +769,10 @@
         this._incrementPendingSyncCount();
         this.dataProvider.updateCheckedArticleComplianceHashesAsync(this._selectedYear, [{articleId: item.articleId, month: item.month, complianceHashes: item.hashes}])
           .then(function(){
-            that.set('_data', that._data.slice());
             that.set('selectedArticle.toBeCompliant', JSON.parse(JSON.stringify(that.selectedArticle.toBeCompliant)));
             that._setMetaData();
             that._updateComplianceStatusForSelectedMonth(that.selectedArticle);
+            that.set('_data', that._data.slice());
           })
           .then(function(){
             that._decrementPendingSyncCount();
