@@ -75,14 +75,15 @@
                 this.scopeSubtree(this.$.heatMapContainer, true);
             },
 
-            attached: function () {
+            render: function () {
+                for(var i=0; i<this.$.heatMapContainer.children.length; i++)
+                    this.$.heatMapContainer.children[i].remove();
+
                 this.svg = d3.select("#heatMapContainer").append("svg")
                     .attr("width", this.width)
                     .attr("height", this.height)
                     .append("g");
-            },
 
-            render: function () {
                 var that = this;
                 var data = this.data
                     .map(function (e, i) {

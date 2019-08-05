@@ -462,6 +462,11 @@
           type: String
         },
 
+        lawModel: {
+          type: Object,
+          observer: '_lawModelChanged'
+        },
+
         modelSheet: {
           type: String,
           value: 'heat-map'
@@ -543,10 +548,6 @@
           type: Object
         },
 
-        hashProvider: {
-          type: Object
-        },
-
         _pendingStatusSyncCount: {
           type: Number,
           value: 0
@@ -555,18 +556,14 @@
         _allMonths: {
           type: Array,
           value: function(){
-            return moment.months().map(function(_month){
-              return _month.substring(0, 3);
-            });
+            return moment.months();
           }
         },
 
         _monthSelectionOptions: {
           type: Array,
           value: function(){
-            return moment.months().map(function(_month, index){
-              return _month.substring(0, 3);
-            });
+            return moment.months();
           }
         },
 
@@ -604,8 +601,18 @@
 
       observers: [
         '_selectedDurationChanged(_selectedYear, _selectedMonth)',
-        '_loadData(key, dataProvider, _selectedYear)'
+        '_prepareData(lawModel, dataProvider, _selectedYear)'
         ],
+
+      _lawModelChanged: function(lawModel){
+        if(!lawModel)
+          return;
+
+        if((this._prevLawModel || {}).id != lawModel.id)
+          this.selected = 1;
+
+        this._prevLawModel = lawModel;
+      },
 
       _currentDurationChanged: function(currentDuration){
         this.set('_selectedYear', currentDuration.year());
@@ -728,35 +735,43 @@
       },
 
       _queueUpdationRequest: function(articleId, year, month, complianceItem){
-        var hash = complianceItem.contentHash;
-        var hasComplianceMet = complianceItem.complianceMet;
-
         complianceItem.updatePending = true;
+        var that = this;
         this._notifyComplianceUpdationProgress(complianceItem);
         var request = this._updationQueue.find(function(_x){
-          return _x.articleId == articleId && _x.year == year && _x.month == month;
+          return _x.lawId == that.lawModel.id && _x.articleId == articleId;
         });
         if(!request){
-          this.selectedArticle.checkedComplianceHashes = this.selectedArticle.checkedComplianceHashes || {};
-          var currentHashes = this.selectedArticle.checkedComplianceHashes[month] = this.selectedArticle.checkedComplianceHashes[month] || [];
-
-          request = {articleId: articleId, year: year, month: month, 
-              hashes: currentHashes, complianceItems: []};
+          request = {lawId: this.lawModel.id, articleId: articleId, complianceUpdates: []};
           this._updationQueue.push(request);
         }
 
-        var itemIndex = request.complianceItems.indexOf(complianceItem);
-        if(itemIndex == -1) request.complianceItems.push(complianceItem);
+        var yearEntry = request.complianceUpdates.find(function(_complianceUpdate){
+          return _complianceUpdate.year == year;
+        })
 
-        var existingHashIndex = request.hashes.indexOf(hash);
-        if(hasComplianceMet){
-          if(existingHashIndex >= 0)
-            request.hashes.splice(existingHashIndex, 1);
+        if(!yearEntry){
+          yearEntry = {year: year, monthlyStatuses: []};
+          request.complianceUpdates.push(yearEntry);
         }
-        else{
-          if(existingHashIndex == -1)
-            request.hashes.push(hash);
+
+        var monthEntry = yearEntry.monthlyStatuses.find(function(monthEntry){
+          return monthEntry.month == month;
+        });
+        if(!monthEntry){
+          monthEntry = {month: month, complianceItems: []};
+          yearEntry.monthlyStatuses.push(monthEntry);
         }
+
+        var complianceEntry = monthEntry.complianceItems.find(function(ci){
+          return ci.id == complianceItem.id;
+        })
+        if(!complianceEntry){
+          complianceEntry = {id: complianceItem.id};
+          monthEntry.complianceItems.push(complianceEntry);
+        }
+
+        complianceEntry.isComplianceMet = complianceItem.complianceMet;
       },
 
       _processNextQueueItemAsync: function(){
@@ -767,18 +782,23 @@
         var item = this._updationQueue.shift();
 
         this._incrementPendingSyncCount();
-        this.dataProvider.updateCheckedArticleComplianceHashesAsync(this._selectedYear, [{articleId: item.articleId, month: item.month, complianceHashes: item.hashes}])
-          .then(function(){
+        return this.dataProvider.updateComplianceAsync(this.lawModel.id, item.articleId, item.complianceUpdates)
+          .then(function(articleState){
             that.set('selectedArticle.toBeCompliant', JSON.parse(JSON.stringify(that.selectedArticle.toBeCompliant)));
             that._setMetaData();
+            that._mergeComplianceHashesWithArticles(that._data, [articleState], that._selectedYear);
             that._updateComplianceStatusForSelectedMonth(that.selectedArticle);
             that.set('_data', that._data.slice());
           })
           .then(function(){
             that._decrementPendingSyncCount();
-            item.complianceItems.forEach(function(_item){
-              _item.updatePending = false;
-              that._notifyComplianceUpdationProgress(_item);
+            item.complianceUpdates.forEach(function(render_complianceUpdate){
+              (_complianceUpdate.monthlyStatuses || []).forEach(function(monthlyStatus){
+                (monthlyStatus.complianceItems || []).forEach(function(complianceItem){
+                  complianceItem.updatePending = false;
+                  that._notifyComplianceUpdationProgress(complianceItem);
+                })
+              })
             });
             that._setMetaData();
             that._processNextQueueItemAsync();
@@ -787,7 +807,7 @@
 
       _notifyComplianceUpdationProgress: function(complianceItem){
         for(var i=0; i<this.selectedArticle.toBeCompliant.length; i++){
-          if(this.selectedArticle.toBeCompliant[i].contentHash == complianceItem.contentHash){
+          if(this.selectedArticle.toBeCompliant[i].id == complianceItem.id){
             this.set(['selectedArticle.toBeCompliant', i, 'updatePending'].join('.'), complianceItem.updatePending);
             break;
           }
@@ -798,6 +818,8 @@
         var that = this;
         var item = e.model.item;
         
+        item.complianceMet = !item.complianceMet;
+
         this._queueUpdationRequest(this.selectedArticle.id, this._selectedYear, this._selectedMonth, item);
 
         this._processNextQueueItemAsync();
@@ -833,6 +855,10 @@
         this.fire('dataload-begin');
       },
 
+      _showError: function(e){
+        this.fire('errored', e);
+      },
+
       _hideLoader: function(){
         this.fire('dataload-end');
       },
@@ -845,28 +871,43 @@
         this.set('_pendingStatusSyncCount', this._pendingStatusSyncCount - 1);
       },
 
-      _loadData: function () {
+      _prepareData: function () {
         var that = this;
         this._showLoader();
-        this._fetchSheetData()
-          .then(function (data) {
-            that.dataLoaded = true;
-            var model = data[0], glossary = data[1];
-            var articles = that._transform(model);        
-            that._incrementPendingSyncCount();
-            return that._syncCheckedStatus(articles)
-              .then(function(){
-                that._decrementPendingSyncCount();
-                that.categoryColors = data[3];
-                that._attachAdditionalInfoToArticles(articles, data[2], data[3]);
-                that.set('glossary', glossary);
-                that.set('_data', articles);
-                that._setMetaData();
-              });
-          })
-          .then(function () {
-            that._hideLoader();
+        
+        that.dataLoaded = true;
+        var articles = this._clone(this.lawModel.articles || []), 
+          glossary = this._clone(this.lawModel.glossary || []);
+
+        articles.forEach(function(article){
+          (article.toBeCompliant || []).forEach(function(tbc){
+            tbc.complianceMet = false;
           });
+        });
+
+        that._incrementPendingSyncCount();
+        return that._syncCheckedStatus(articles)
+        .then(function(){
+          that._decrementPendingSyncCount();
+          that.categoryColors = that.lawModel.categoryColors;
+          that._attachAdditionalInfoToArticles(articles, that.lawModel.periodicTable, that.lawModel.categoryColors);
+          that.set('glossary', glossary);
+          that.set('_data', articles);
+          that._setMetaData();
+        })
+        .catch(function(error){
+          that._showError(error);
+        })
+        .then(function(){
+          that._hideLoader();
+        });
+      },
+
+      _clone: function(data){
+        if(data == undefined || data == null)
+          return data;
+
+        return JSON.parse(JSON.stringify(data));
       },
 
       _syncCheckedStatus: function(articles){
@@ -876,37 +917,45 @@
           return _article.id;
         });
 
-        return this.dataProvider.getCheckedArticleComplianceHashesAsync(allArticleIds, year, this._allMonths)
-          .then(function(articleComplianceHashes){
-            that._mergeComplianceHashesWithArticles(articles, articleComplianceHashes);
+        return this.dataProvider.batchGetArticleCompliancesAsync(this.lawModel.id, allArticleIds)
+          .then(function(response){
+            that._mergeComplianceHashesWithArticles(articles, response.articles, that._selectedYear);
           })
           .catch(function(){});
       },
 
       _updateComplianceStatusForSelectedMonth: function(article){
         var that = this;
-        article.toBeCompliant.forEach(function(compliance){
-          var complianceMet = ((article.checkedComplianceHashes || {})[that._selectedMonth] || []).find(function(_hash){
-            return _hash == compliance.contentHash;
-          });
-          if(complianceMet)
-            compliance.complianceMet = true;
-          else
-            compliance.complianceMet = false;
+        (article.toBeCompliant || []).forEach(function(compliance){
+          var monthlyStatus = (article.monthlyStatuses || []).find(function(monthlyStatus){
+            return monthlyStatus.month == that._selectedMonth;
+          }) || {};
+          var complianceItem = (monthlyStatus.complianceItems || []).find(function(complianceItem){
+            return complianceItem.id == compliance.id;
+          }) || {isComplianceMet: false}
+          
+          compliance.complianceMet = complianceItem.isComplianceMet;
         });
       },
 
-      _mergeComplianceHashesWithArticles: function(articles, articleComplianceHashes){
+      _mergeComplianceHashesWithArticles: function(articles, articleStates, selectedYear){
         var that = this;
-        (articleComplianceHashes || []).forEach(function(articleComplianceHash){
+        (articleStates || []).forEach(function(articleState){
+          var yearState = articleState.yearlyCompliances.find(function(yearlyCompliance){
+            return yearlyCompliance.year == selectedYear;
+          });
+
+          if(!yearState)
+            return;
+
           var match = articles.find(function(_article){
-            return _article.id == articleComplianceHash.articleId;
+            return _article.id == articleState.articleId;
           });
 
           if(!match)
             return;
 
-          match.checkedComplianceHashes = articleComplianceHash.checkedComplianceHashes;
+          match.monthlyStatuses = yearState.monthlyStatuses;
           
           that._updateComplianceStatusForSelectedMonth(match);
         });
@@ -921,7 +970,7 @@
 
         return this._data
           .map(function (e) {
-            e.toBeCompliant.forEach(function (c) {
+            (e.toBeCompliant || []).forEach(function (c) {
               c.status = c.complianceMet ? 100 : 0;
               return c;
             });
@@ -985,7 +1034,7 @@
           article.periodicTableInfo.categoryColors = {};
 
           var categoryColors = colors.filter(function (color) {
-            return color.category.trim().toLowerCase() == article.periodicTableInfo.category.trim().toLowerCase();
+            return color.category.trim().toLowerCase() == (article.periodicTableInfo.category || '').trim().toLowerCase();
           });
 
           categoryColors.forEach(function (categoryColor) {
@@ -996,41 +1045,6 @@
               article.periodicTableInfo.categoryColors.text = categoryColor.value;
           });
         });
-      },
-
-      _transform: function (model) {
-        var articles = [];
-        var that = this;
-
-        model.forEach(function (row, index) {
-          var content = (row.articlecontent || '').match(/^(.*)$/mg);
-          var name = 'Article ' + row.article;
-          var article = articles.find(function (e) { return e.name === name; }) || articles.push({
-            id: row.article,
-            name: name,
-            description: row.oversimplifieddescriptionarticlesandrecitals,
-            articleContent: row.articlecontent.trim(),
-            faqs: [],
-            toBeCompliant: []
-          }) && articles[articles.length - 1];
-
-          if (row.faqs) {
-            article.faqs.push({
-              title: row.faqs.match(/^(.*)$/m)[0],
-              description: row.faqs.replace(row.faqs.match(/^(.*)$/m)[0], '').trim()
-            });
-          }
-
-          if (row.whatitmeansoutcomestobecompliantmodeltobecompliantmycompanycontrollermust) {
-            article.toBeCompliant.push({
-              content: row.whatitmeansoutcomestobecompliantmodeltobecompliantmycompanycontrollermust,
-              contentHash: that.hashProvider.getHash(row.whatitmeansoutcomestobecompliantmodeltobecompliantmycompanycontrollermust),
-              complianceMet: false
-            });
-          }
-        });
-
-        return articles;
       },
 
       _setMetaData: function(){
@@ -1046,7 +1060,7 @@
             .filter(function (e) {
               return e.complianceMet;
             }).length;
-          var total = article.toBeCompliant.length;
+          var total = (article.toBeCompliant || []).length;
 
           if (total !== 0 && completed === total) count++;
 
@@ -1068,7 +1082,7 @@
         var done = 0;
 
         data.forEach(function (article) {
-          var items = article.toBeCompliant;
+          var items = article.toBeCompliant || [];
           items.forEach(function (item) {
             total++;
             if (item.complianceMet) done++;
