@@ -792,7 +792,7 @@
           })
           .then(function(){
             that._decrementPendingSyncCount();
-            item.complianceUpdates.forEach(function(render_complianceUpdate){
+            item.complianceUpdates.forEach(function(_complianceUpdate){
               (_complianceUpdate.monthlyStatuses || []).forEach(function(monthlyStatus){
                 (monthlyStatus.complianceItems || []).forEach(function(complianceItem){
                   complianceItem.updatePending = false;
