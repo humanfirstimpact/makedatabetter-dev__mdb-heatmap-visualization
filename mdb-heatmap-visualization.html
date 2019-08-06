@@ -329,7 +329,7 @@
       <iron-pages selected="{{selectedTab}}">
         <div class='summary'>
           <div class="column chart">
-            <h2>Our GDPR Story</h2>
+            <h2>Our [[lawType]] Story</h2>
             <mdb-heatmap data="[[data]]"></mdb-heatmap>
             <div class="gdpr-metrics">
               <div>
@@ -465,6 +465,10 @@
         lawModel: {
           type: Object,
           observer: '_lawModelChanged'
+        },
+
+        lawType: {
+          type: String
         },
 
         modelSheet: {
